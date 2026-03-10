@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>League Management - GameHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-panel {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+            align-items: start;
+        }
+
+        .sidebar {
+            background: var(--light-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .sidebar-item {
+            padding: 0.75rem 1rem;
+            margin: 0.5rem 0;
+            background: var(--dark-bg);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-item:hover,
+        .sidebar-item.active {
+            background: var(--primary-color);
+            border-left-color: var(--secondary-color);
+        }
+
+        .content {
+            background: var(--light-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .league-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            color: white;
+        }
+
+        .league-header h2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .league-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--dark-bg);
+        }
+
+        thead {
+            background: rgba(107, 95, 255, 0.2);
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tbody tr:hover {
+            background: rgba(107, 95, 255, 0.1);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-approve {
+            background: rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+
+        .btn-approve:hover {
+            background: rgba(76, 175, 80, 0.5);
+        }
+
+        .btn-reject {
+            background: rgba(244, 67, 54, 0.3);
+            color: #F44336;
+            border: 1px solid #F44336;
+        }
+
+        .btn-reject:hover {
+            background: rgba(244, 67, 54, 0.5);
+        }
+
+        .match-form {
+            background: var(--dark-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--light-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: inherit;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .badge-approved {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+
+        .badge-pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #FFC107;
+        }
+
+        .badge-paid {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+
+        .badge-unpaid {
+            background: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+        }
+
+        @media (max-width: 1024px) {
+            .admin-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .sidebar-item {
+                flex: 1;
+                min-width: 150px;
+                margin: 0;
+            }
+
+            .league-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .success-message, .error-message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success-message {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            color: #4CAF50;
+        }
+
+        .error-message {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #F44336;
+            color: #F44336;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--border-color);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a href="index.html" style="text-decoration: none; color: white;">
+                <h1>🎮 GameHub</h1>
+            </a>
+        </div>
+        <div class="navbar-menu">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="leagues.html" class="nav-link">Leagues</a>
+            <a href="teams.html" class="nav-link">Teams</a>
+            <div id="userMenu" class="user-menu">
+                <a href="dashboard.html" class="nav-link">Dashboard</a>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="successMsg" class="success-message"></div>
+        <div id="errorMsg" class="error-message"></div>
+
+        <div id="leagueHeader" class="league-header">
+            <h2 id="leagueName">League Name</h2>
+            <p id="leagueDesc">League Description</p>
+            <div class="league-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="participantCount">0</div>
+                    <div class="stat-label">Participants</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="matchCount">0</div>
+                    <div class="stat-label">Matches</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="entryFee">3000</div>
+                    <div class="stat-label">Entry Fee (TSH)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="leagueFormat">Format</div>
+                    <div class="stat-label">League Type</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-panel">
+            <div class="sidebar">
+                <div class="sidebar-item active" data-section="overview">📊 Overview</div>
+                <div class="sidebar-item" data-section="members">👥 Members</div>
+                <div class="sidebar-item" data-section="matches">⚽ Matches</div>
+                <div class="sidebar-item" data-section="results">📝 Results</div>
+                <div class="sidebar-item" data-section="payments">💰 Payments</div>
+            </div>
+
+            <div class="content">
+                <!-- Overview Section -->
+                <div id="overview" class="section active">
+                    <h3>League Overview</h3>
+                    <div style="margin-top: 1.5rem;">
+                        <h4>League Information</h4>
+                        <div style="background: var(--dark-bg); padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+                            <p><strong>Game:</strong> <span id="gameType">-</span></p>
+                            <p><strong>Format:</strong> <span id="formatType">-</span></p>
+                            <p><strong>Status:</strong> <span id="leagueStatus">-</span></p>
+                            <p><strong>Entry Fee:</strong> <span id="feeCurrency">3000 TSH</span></p>
+                        </div>
+
+                        <h4>Quick Actions</h4>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="switchSection('matches')">Create Match</button>
+                            <button class="btn btn-secondary" onclick="switchSection('members')">Review Members</button>
+                            <button class="btn btn-secondary" onclick="switchSection('results')">Approve Results</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Members Section -->
+                <div id="members" class="section">
+                    <h3>League Members Management</h3>
+                    
+                    <h4 style="margin-top: 1.5rem;">Pending Approvals <span id="pendingCount" style="color: var(--secondary-color);">0</span></h4>
+                    <div id="pendingMembers" class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Player</th>
+                                    <th>Email</th>
+                                    <th>Payment Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingList">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: var(--border-color);">No pending approvals</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 style="margin-top: 2rem;">Approved Members</h4>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Player</th>
+                                    <th>Status</th>
+                                    <th>Payment</th>
+                                    <th>Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody id="approvedList">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: var(--border-color);">No approved members</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Matches Section -->
+                <div id="matches" class="section">
+                    <h3>Create & Manage Matches</h3>
+
+                    <div class="match-form">
+                        <h4>Create New Match</h4>
+                        <form id="matchForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Match Number</label>
+                                    <input type="number" id="matchNumber" min="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Stage</label>
+                                    <select id="matchStage" required>
+                                        <option value="">Select stage...</option>
+                                        <option value="group-stage">Group Stage</option>
+                                        <option value="knockout-round-1">Knockout Round 1</option>
+                                        <option value="knockout-round-2">Knockout Round 2</option>
+                                        <option value="semi-final">Semi Final</option>
+                                        <option value="final">Final</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Team 1 / Player 1</label>
+                                    <input type="text" id="team1" placeholder="Enter team or player name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Team 2 / Player 2</label>
+                                    <input type="text" id="team2" placeholder="Enter team or player name" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Date</label>
+                                    <input type="date" id="matchDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Time</label>
+                                    <input type="time" id="matchTime" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Venue</label>
+                                    <input type="text" id="matchVenue" placeholder="e.g., Online, Stadium Name" required>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Create Match</button>
+                        </form>
+                    </div>
+
+                    <h4>Scheduled Matches</h4>
+                    <div id="matchesList" class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Match #</th>
+                                    <th>Teams</th>
+                                    <th>Stage</th>
+                                    <th>Date & Time</th>
+                                    <th>Venue</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="matchesTableBody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: var(--border-color);">No matches created yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="results" class="section">
+                    <h3>Result Approvals</h3>
+
+                    <div id="resultsList" class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Match</th>
+                                    <th>Score</th>
+                                    <th>Submitted By</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsTableBody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--border-color);">No results submitted</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Payments Section -->
+                <div id="payments" class="section">
+                    <h3>Payment Management</h3>
+
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Player</th>
+                                    <th>Amount</th>
+                                    <th>Method</th>
+                                    <th>Status</th>
+                                    <th>Transaction</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paymentsTableBody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--border-color);">No payment records</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        let currentLeagueId = null;
+
+        // Get league ID from URL
+        const params = new URLSearchParams(window.location.search);
+        currentLeagueId = params.get('id');
+
+        if (!currentLeagueId) {
+            document.getElementById('errorMsg').textContent = 'Invalid league ID';
+            document.getElementById('errorMsg').style.display = 'block';
+        }
+
+        // Load league details
+        async function loadLeagueDetails() {
+            try {
+                const response = await fetch(`/api/leagues/details/${currentLeagueId}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message);
+                }
+
+                const league = data.league;
+                document.getElementById('leagueName').textContent = league.name;
+                document.getElementById('leagueDesc').textContent = league.description;
+                document.getElementById('participantCount').textContent = league.participants_count || 0;
+                document.getElementById('entryFee').textContent = league.entry_fee || 3000;
+                document.getElementById('leagueFormat').textContent = league.format || 'Standard';
+                document.getElementById('gameType').textContent = league.game;
+                document.getElementById('formatType').textContent = league.format;
+                document.getElementById('leagueStatus').textContent = league.status || 'Open';
+                document.getElementById('feeCurrency').textContent = (league.entry_fee || 3000) + ' TSH';
+
+                // Load members
+                updateMembersList(league.members);
+
+                // Load matches
+                loadMatches();
+                // Load payments
+                loadPayments();
+            } catch (error) {
+                showError('Error loading league: ' + error.message);
+            }
+        }
+
+        function updateMembersList(members) {
+            const pending = members.filter(m => m.status === 'pending');
+            const approved = members.filter(m => m.status === 'approved');
+
+            document.getElementById('pendingCount').textContent = pending.length;
+
+            // Pending members
+            const pendingList = document.getElementById('pendingList');
+            if (pending.length === 0) {
+                pendingList.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--border-color);">No pending approvals</td></tr>';
+            } else {
+                pendingList.innerHTML = pending.map(member => `
+                    <tr>
+                        <td>${member.username || 'Unknown'}</td>
+                        <td>${member.email || '-'}</td>
+                        <td><span class="badge badge-${member.payment_status || 'unpaid'}">${(member.payment_status || 'unpaid').toUpperCase()}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn btn-approve" onclick="approveMember(${member.user_id})">Approve</button>
+                                <button class="action-btn btn-reject" onclick="rejectMember(${member.user_id})">Reject</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // Approved members
+            const approvedList = document.getElementById('approvedList');
+            if (approved.length === 0) {
+                approvedList.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--border-color);">No approved members</td></tr>';
+            } else {
+                approvedList.innerHTML = approved.map(member => `
+                    <tr>
+                        <td>${member.username || 'Unknown'}</td>
+                        <td><span class="badge badge-approved">APPROVED</span></td>
+                        <td><span class="badge badge-${member.payment_status || 'unpaid'}">${(member.payment_status || 'unpaid').toUpperCase()}</span></td>
+                        <td>${new Date(member.joined_at).toLocaleDateString()}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        async function loadMatches() {
+            try {
+                const response = await fetch(`/api/leagues/${currentLeagueId}/matches`);
+                const data = await response.json();
+
+                const matchesTable = document.getElementById('matchesTableBody');
+                if (!data.matches || data.matches.length === 0) {
+                    matchesTable.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--border-color);">No matches created yet</td></tr>';
+                } else {
+                    matchesTable.innerHTML = data.matches.map(match => `
+                        <tr>
+                            <td>${match.match_number}</td>
+                            <td>${match.team_1_name || 'TBD'} vs ${match.team_2_name || 'TBD'}</td>
+                            <td>${match.stage}</td>
+                            <td>${new Date(match.scheduled_date).toLocaleDateString()} ${match.scheduled_time}</td>
+                            <td>${match.venue}</td>
+                            <td><span class="badge badge-pending">${match.status.toUpperCase()}</span></td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Update match count
+                document.getElementById('matchCount').textContent = data.matches.length;
+            } catch (error) {
+                console.error('Error loading matches:', error);
+            }
+        }
+
+        async function loadPayments() {
+            try {
+                const response = await fetch(`/api/leagues/${currentLeagueId}/payments`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+
+                const paymentsTable = document.getElementById('paymentsTableBody');
+                if (!data.payments || data.payments.length === 0) {
+                    paymentsTable.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--border-color);">No payment records</td></tr>';
+                } else {
+                    paymentsTable.innerHTML = data.payments.map(payment => `
+                        <tr>
+                            <td>${payment.username || 'Unknown'}</td>
+                            <td>${payment.amount} ${payment.currency}</td>
+                            <td>${payment.payment_method || 'Not specified'}</td>
+                            <td>
+                                <select onchange="updatePaymentStatus(${payment.id}, this.value)" style="padding: 0.25rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--dark-bg); color: var(--text-color);">
+                                    <option value="pending" ${payment.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                    <option value="confirmed" ${payment.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                                    <option value="paid" ${payment.status === 'paid' ? 'selected' : ''}>Paid</option>
+                                    <option value="rejected" ${payment.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                                </select>
+                            </td>
+                            <td>${payment.transaction_id || '-'}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading payments:', error);
+            }
+        }
+
+        async function updatePaymentStatus(paymentId, status) {
+            try {
+                const response = await fetch(`/api/payments/${paymentId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showError(data.message);
+                    return;
+                }
+
+                showSuccess('Payment status updated');
+            } catch (error) {
+                showError('Error updating payment status: ' + error.message);
+            }
+        }
+
+        // Sidebar navigation
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', () => {
+                switchSection(item.dataset.section);
+            });
+        });
+
+        function switchSection(section) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+
+            document.getElementById(section).classList.add('active');
+            document.querySelector(`[data-section="${section}"]`).classList.add('active');
+        }
+
+        // Match form submission
+        document.getElementById('matchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const matchData = {
+                league_id: currentLeagueId,
+                match_number: parseInt(document.getElementById('matchNumber').value),
+                team_1_id: document.getElementById('team1').value,
+                team_2_id: document.getElementById('team2').value,
+                scheduled_date: document.getElementById('matchDate').value,
+                scheduled_time: document.getElementById('matchTime').value,
+                venue: document.getElementById('matchVenue').value,
+                stage: document.getElementById('matchStage').value
+            };
+
+            try {
+                const response = await fetch('/api/matches/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(matchData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showError(data.message);
+                    return;
+                }
+
+                showSuccess('Match created successfully');
+                document.getElementById('matchForm').reset();
+                loadMatches();
+            } catch (error) {
+                showError('Error: ' + error.message);
+            }
+        });
+
+        async function approveMember(userId) {
+            try {
+                const response = await fetch(`/api/leagues/${currentLeagueId}/approve-member`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ user_id: userId })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showError(data.message);
+                    return;
+                }
+
+                showSuccess('Member approved');
+                loadLeagueDetails();
+            } catch (error) {
+                showError('Error: ' + error.message);
+            }
+        }
+
+        function rejectMember(userId) {
+            alert('Member rejection will be implemented');
+        }
+
+        function showSuccess(message) {
+            const el = document.getElementById('successMsg');
+            el.textContent = message;
+            el.style.display = 'block';
+            setTimeout(() => {
+                el.style.display = 'none';
+            }, 3000);
+        }
+
+        function showError(message) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = message;
+            el.style.display = 'block';
+            setTimeout(() => {
+                el.style.display = 'none';
+            }, 4000);
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize
+        loadLeagueDetails();
+    </script>
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prize Distribution - GameHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .prizes-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            background: var(--light-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .prizes-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .prize-distribution {
+            background: var(--dark-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .prize-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .prize-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .prize-position {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+
+        .prize-amount {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+        }
+
+        .prize-description {
+            flex: 1;
+            margin: 0 1rem;
+        }
+
+        .winner-info {
+            background: rgba(76, 175, 80, 0.1);
+            padding: 1rem;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+            margin-top: 0.5rem;
+        }
+
+        .no-winner {
+            background: rgba(244, 67, 54, 0.1);
+            padding: 1rem;
+            border-radius: 4px;
+            border-left: 4px solid #F44336;
+            margin-top: 0.5rem;
+        }
+
+        .award-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .award-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .award-btn:disabled {
+            background: var(--border-color);
+            cursor: not-allowed;
+        }
+
+        .awarded {
+            background: rgba(76, 175, 80, 0.2);
+            border-left-color: #4CAF50;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--border-color);
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 2rem;
+            color: var(--border-color);
+        }
+
+        .league-info {
+            background: rgba(78, 205, 196, 0.1);
+            padding: 1rem;
+            border-radius: 4px;
+            border-left: 4px solid var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+
+        .total-prize-pool {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .prizes-container {
+                margin: 1rem;
+                padding: 1rem;
+            }
+
+            .prize-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a href="index.html" style="text-decoration: none; color: white;">
+                <h1>🎮 GameHub</h1>
+            </a>
+        </div>
+        <div class="navbar-menu">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="leagues.html" class="nav-link">Leagues</a>
+            <a href="teams.html" class="nav-link">Teams</a>
+            <div id="userMenu" class="user-menu">
+                <a href="dashboard.html" class="nav-link">Dashboard</a>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="message" class="message"></div>
+
+        <div class="prizes-container">
+            <div class="prizes-header">
+                <h1>Prize Distribution</h1>
+                <div id="leagueInfo" class="league-info">
+                    <h3 id="leagueName">Loading...</h3>
+                    <p id="leagueDetails">Loading league details...</p>
+                </div>
+            </div>
+
+            <div id="prizesContent">
+                <div class="loading">Loading prize distribution...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // Get league ID from URL
+        const params = new URLSearchParams(window.location.search);
+        const leagueId = params.get('league_id');
+
+        if (!leagueId) {
+            showMessage('Invalid league ID', 'error');
+        }
+
+        // Load prize distribution
+        async function loadPrizeDistribution() {
+            try {
+                const response = await fetch(`/api/leagues/${leagueId}/prize-distribution`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message);
+                }
+
+                displayLeagueInfo(data.league);
+                displayPrizeDistribution(data.prize_distribution, data.league);
+            } catch (error) {
+                showMessage('Error loading prize distribution: ' + error.message, 'error');
+                document.getElementById('prizesContent').innerHTML = '<div class="no-data">Unable to load prize distribution</div>';
+            }
+        }
+
+        // Display league information
+        function displayLeagueInfo(league) {
+            document.getElementById('leagueName').textContent = league.name;
+            document.getElementById('leagueDetails').textContent = `${league.game_type} • ${league.max_participants} teams • Entry Fee: ${league.entry_fee} TSH`;
+        }
+
+        // Display prize distribution
+        function displayPrizeDistribution(prizeDistribution, league) {
+            if (!prizeDistribution || prizeDistribution.length === 0) {
+                document.getElementById('prizesContent').innerHTML = '<div class="no-data">No prize distribution configured</div>';
+                return;
+            }
+
+            // Calculate total prize pool
+            const totalParticipants = league.max_participants;
+            const entryFee = league.entry_fee || 0;
+            const totalPrizePool = totalParticipants * entryFee;
+
+            let html = `<div class="total-prize-pool">Total Prize Pool: ${totalPrizePool} TSH</div>`;
+
+            html += '<div class="prize-distribution">';
+            html += '<h3>Prize Distribution</h3>';
+
+            for (const prize of prizeDistribution) {
+                const position = prize.position;
+                const amount = prize.percentage ? Math.round(totalPrizePool * (prize.percentage / 100)) : prize.amount;
+                const description = prize.description || `${getOrdinalSuffix(position)} Place`;
+
+                html += `
+                    <div class="prize-item ${prize.awarded ? 'awarded' : ''}">
+                        <div class="prize-position">${getOrdinalSuffix(position)}</div>
+                        <div class="prize-description">${description}</div>
+                        <div class="prize-amount">${amount} TSH</div>
+                        ${prize.awarded ?
+                            `<div class="winner-info">
+                                Awarded to: ${prize.winner_name} (${prize.team_name})
+                                <br>Transaction ID: ${prize.transaction_id}
+                            </div>` :
+                            `<div class="no-winner">
+                                Not yet awarded
+                                <button class="award-btn" onclick="awardPrize(${prize.id}, ${position})">Award Prize</button>
+                            </div>`
+                        }
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+            document.getElementById('prizesContent').innerHTML = html;
+        }
+
+        // Award prize to winner
+        async function awardPrize(prizeId, position) {
+            // Get winner information based on standings
+            try {
+                const standingsResponse = await fetch(`/api/leagues/${leagueId}/standings`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const standingsData = await standingsResponse.json();
+
+                if (!standingsResponse.ok || !standingsData.standings || standingsData.standings.length < position) {
+                    showMessage('Unable to determine winner for this position', 'error');
+                    return;
+                }
+
+                const winner = standingsData.standings[position - 1];
+
+                // Confirm award
+                if (!confirm(`Award ${getOrdinalSuffix(position)} place prize to ${winner.team_name}?`)) {
+                    return;
+                }
+
+                // Award the prize
+                const awardResponse = await fetch(`/api/leagues/${leagueId}/award-prizes`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        position: position,
+                        winner_team_id: winner.team_id,
+                        winner_user_id: winner.user_id
+                    })
+                });
+
+                const awardData = await awardResponse.json();
+
+                if (!awardResponse.ok) {
+                    throw new Error(awardData.message);
+                }
+
+                showMessage('Prize awarded successfully!', 'success');
+                // Reload prize distribution
+                loadPrizeDistribution();
+
+            } catch (error) {
+                showMessage('Error awarding prize: ' + error.message, 'error');
+            }
+        }
+
+        function getOrdinalSuffix(num) {
+            const j = num % 10;
+            const k = num % 100;
+            if (j === 1 && k !== 11) return num + 'st';
+            if (j === 2 && k !== 12) return num + 'nd';
+            if (j === 3 && k !== 13) return num + 'rd';
+            return num + 'th';
+        }
+
+        function showMessage(message, type) {
+            const el = document.getElementById('message');
+            el.textContent = message;
+            el.className = 'message ' + type;
+            el.style.display = 'block';
+            setTimeout(() => {
+                el.style.display = 'none';
+            }, 5000);
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize
+        if (leagueId) {
+            loadPrizeDistribution();
+        }
+    </script>
+</body>
+</html>

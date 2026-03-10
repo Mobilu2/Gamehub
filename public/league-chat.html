@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>League Chat - GameHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .chat-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--dark-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: rgba(107, 95, 255, 0.1);
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title h2 {
+            margin: 0;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chat-members {
+            background: var(--light-bg);
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--border-color);
+        }
+
+        .messages-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            display: flex;
+            gap: 0.75rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.own {
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            max-width: 70%;
+        }
+
+        .message.own .message-content {
+            max-width: 70%;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .message.own .message-header {
+            justify-content: flex-end;
+        }
+
+        .message-username {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .message-time {
+            font-size: 0.8rem;
+            color: var(--border-color);
+        }
+
+        .message-text {
+            background: rgba(107, 95, 255, 0.1);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .message.own .message-text {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .messages-empty {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: var(--border-color);
+            text-align: center;
+        }
+
+        .messages-empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .input-container {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            background: var(--light-bg);
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .message-input {
+            flex-grow: 1;
+            background: var(--dark-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: none;
+            min-height: 45px;
+            max-height: 100px;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(107, 95, 255, 0.2);
+        }
+
+        .send-button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            min-width: 100px;
+        }
+
+        .send-button:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        .send-button:disabled {
+            background: var(--border-color);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .message-status {
+            font-size: 0.8rem;
+            color: var(--border-color);
+            margin-top: 0.25rem;
+        }
+
+        .notification {
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .notification.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #F44336;
+            color: #F44336;
+        }
+
+        .notification.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            color: #4CAF50;
+        }
+
+        .back-button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .back-button:hover {
+            background: var(--secondary-color);
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                height: calc(100vh - 100px);
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .message.own .message-content {
+                max-width: 85%;
+            }
+
+            .input-container {
+                padding: 1rem;
+            }
+
+            .send-button {
+                min-width: 50px;
+                padding: 0.75rem;
+            }
+
+            .send-button span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a href="index.html" style="text-decoration: none; color: white;">
+                <h1>🎮 GameHub</h1>
+            </a>
+        </div>
+        <div class="navbar-menu">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="leagues.html" class="nav-link">Leagues</a>
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+            <button onclick="logout()" class="btn-logout">Logout</button>
+        </div>
+    </nav>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="chat-title">
+                <h2>💬 <span id="leagueName">League Chat</span></h2>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div class="chat-members" id="memberCount">Loading...</div>
+                <button class="back-button" onclick="goBack()">← Back to League</button>
+            </div>
+        </div>
+
+        <div class="messages-container" id="messagesContainer">
+            <div class="messages-empty">
+                <div>
+                    <div class="messages-empty-icon">💬</div>
+                    <p>Welcome to the league chat!</p>
+                    <p style="font-size: 0.9rem; color: var(--border-color);">Start the conversation below</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <textarea 
+                class="message-input" 
+                id="messageInput" 
+                placeholder="Type your message... (Shift+Enter for new line, Enter to send)"
+                maxlength="500">
+            </textarea>
+            <button class="send-button" id="sendButton" onclick="sendMessage()">
+                <span>Send 📤</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        const API_URL = 'http://localhost:3000/api';
+        let leagueId = null;
+        let currentUser = null;
+        let isLoadingMessages = false;
+
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // Get league ID from URL
+        const params = new URLSearchParams(window.location.search);
+        leagueId = params.get('league_id');
+
+        if (!leagueId) {
+            alert('Invalid league ID');
+            window.location.href = 'leagues.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            currentUser = JSON.parse(localStorage.getItem('user'));
+            loadLeagueInfo();
+            loadMessages();
+            setupMessageInput();
+            
+            // Poll for new messages every 2 seconds
+            setInterval(loadMessages, 2000);
+        });
+
+        function setupMessageInput() {
+            const input = document.getElementById('messageInput');
+            
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        }
+
+        async function loadLeagueInfo() {
+            try {
+                const response = await fetch(`${API_URL}/leagues/details/${leagueId}`);
+                const data = await response.json();
+                document.getElementById('leagueName').textContent = data.league.name;
+                
+                // Load league members count
+                const membersResponse = await fetch(`${API_URL}/leagues/${leagueId}/members`);
+                const membersData = await membersResponse.json();
+                document.getElementById('memberCount').textContent = `👥 ${membersData.members.length} members`;
+            } catch (error) {
+                console.error('Error loading league info:', error);
+            }
+        }
+
+        async function loadMessages() {
+            if (isLoadingMessages) return;
+            
+            try {
+                isLoadingMessages = true;
+                const response = await fetch(`${API_URL}/leagues/${leagueId}/chat?limit=100`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 403) {
+                    showNotification('You are not a member of this league', 'error');
+                    return;
+                }
+
+                if (!response.ok) throw new Error('Failed to load messages');
+
+                const data = await response.json();
+                displayMessages(data.messages);
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            } finally {
+                isLoadingMessages = false;
+            }
+        }
+
+        function displayMessages(messages) {
+            const container = document.getElementById('messagesContainer');
+
+            if (!messages || messages.length === 0) {
+                if (container.innerHTML.includes('messages-empty')) {
+                    return; // Don't update if already showing empty state
+                }
+                container.innerHTML = `
+                    <div class="messages-empty">
+                        <div>
+                            <div class="messages-empty-icon">💬</div>
+                            <p>Welcome to the league chat!</p>
+                            <p style="font-size: 0.9rem; color: var(--border-color);">Start the conversation below</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Check if we need to replace the empty state
+            if (container.innerHTML.includes('messages-empty')) {
+                container.innerHTML = '';
+            }
+
+            // Get existing messages
+            const existingIds = new Set(
+                Array.from(container.querySelectorAll('[data-message-id]'))
+                    .map(el => parseInt(el.getAttribute('data-message-id')))
+            );
+
+            // Add new messages that don't exist
+            messages.forEach(msg => {
+                if (!existingIds.has(msg.id)) {
+                    const isOwn = msg.user_id === currentUser.id;
+                    const messageEl = createMessageElement(msg, isOwn);
+                    container.appendChild(messageEl);
+                }
+            });
+
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function createMessageElement(msg, isOwn) {
+            const div = document.createElement('div');
+            div.setAttribute('data-message-id', msg.id);
+            div.className = `message ${isOwn ? 'own' : ''}`;
+
+            const initials = msg.username.substring(0, 2).toUpperCase();
+            const timestamp = formatTime(new Date(msg.created_at));
+
+            div.innerHTML = `
+                ${!isOwn ? `<div class="message-avatar">${initials}</div>` : ''}
+                <div class="message-content">
+                    <div class="message-header">
+                        ${!isOwn ? `<span class="message-username">${msg.username}</span>` : ''}
+                        <span class="message-time">${timestamp}</span>
+                    </div>
+                    <div class="message-text">${escapeHtml(msg.message)}</div>
+                </div>
+                ${isOwn ? `<div class="message-avatar">${initials}</div>` : ''}
+            `;
+
+            return div;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            const button = document.getElementById('sendButton');
+
+            if (!message) {
+                input.focus();
+                return;
+            }
+
+            try {
+                button.disabled = true;
+                button.innerHTML = '<div class="loading-indicator"></div><span>Sending...</span>';
+
+                const response = await fetch(`${API_URL}/leagues/${leagueId}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                if (response.status === 403) {
+                    showNotification('You are not a member of this league', 'error');
+                    return;
+                }
+
+                if (!response.ok) throw new Error('Failed to send message');
+
+                input.value = '';
+                loadMessages();
+                showNotification('Message sent!', 'success');
+            } catch (error) {
+                console.error('Error sending message:', error);
+                showNotification('Failed to send message. Try again.', 'error');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<span>Send 📤</span>';
+                input.focus();
+            }
+        }
+
+        function formatTime(date) {
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return 'now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showNotification(message, type) {
+            const container = document.getElementById('messagesContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            // For success notifications, auto-remove after 3 seconds
+            if (type === 'success') {
+                setTimeout(() => notification.remove(), 3000);
+            }
+        }
+
+        function goBack() {
+            window.location.href = `leagues.html?view=league&league_id=${leagueId}`;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Auto-scroll to bottom when window is resized
+        window.addEventListener('resize', () => {
+            const container = document.getElementById('messagesContainer');
+            container.scrollTop = container.scrollHeight;
+        });
+    </script>
+</body>
+</html>

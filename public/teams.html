@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teams - GameHub</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a href="index.html" style="text-decoration: none; color: white;">
+                <h1>🎮 GameHub</h1>
+            </a>
+        </div>
+        <div class="navbar-menu">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="leagues.html" class="nav-link">Leagues</a>
+            <a href="teams.html" class="nav-link active">Teams</a>
+            <div id="userMenuTeams" class="user-menu" style="display:none;">
+                <a href="dashboard.html" class="nav-link">Dashboard</a>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </div>
+            <div id="authMenuTeams" class="auth-menu">
+                <a href="login.html" class="btn-login">Login</a>
+                <a href="login.html" class="btn-register">Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Gaming Teams</h1>
+            <p>Find and join teams, or create your own</p>
+            <button id="createTeamBtn" class="btn btn-primary" style="display:none;" onclick="redirectToCreate()">Create Team</button>
+        </div>
+
+        <div class="filters">
+            <input type="text" id="searchTeam" placeholder="Search teams..." class="search-input">
+            <select id="gameTeamFilter" class="filter-select">
+                <option value="">All Games</option>
+                <option value="call of duty">Call of Duty</option>
+                <option value="csgo">CS:GO</option>
+                <option value="lol">League of Legends</option>
+                <option value="dota2">Dota 2</option>
+                <option value="valorant">Valorant</option>
+                <option value="fortnite">Fortnite</option>
+            </select>
+        </div>
+
+        <div id="teamsContainer" class="teams-container">
+            <!-- Teams will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Team Details Modal -->
+    <div id="teamModal" class="modal">
+        <div class="modal-content modal-lg">
+            <span class="close" onclick="closeModal('teamModal')">&times;</span>
+            <div id="teamDetails"></div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 GameHub. All rights reserved.</p>
+    </footer>
+
+    <script src="js/auth.js"></script>
+    <script src="js/teams.js"></script>
+</body>
+</html>

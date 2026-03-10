@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Payment - GameHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .payment-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            background: var(--light-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .payment-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .payment-form {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 0.75rem;
+            background: var(--dark-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .payment-summary {
+            background: rgba(78, 205, 196, 0.1);
+            padding: 1rem;
+            border-radius: 4px;
+            border-left: 4px solid var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+
+        .payment-instructions {
+            background: rgba(107, 95, 255, 0.1);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .method-card {
+            background: var(--dark-bg);
+            padding: 1rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .method-card:hover,
+        .method-card.selected {
+            border-color: var(--primary-color);
+            background: rgba(107, 95, 255, 0.1);
+        }
+
+        .method-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .method-name {
+            font-weight: 500;
+        }
+
+        .method-details {
+            font-size: 0.85rem;
+            color: var(--border-color);
+            margin-top: 0.25rem;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            color: #4CAF50;
+        }
+
+        .creator-account-info {
+            background: rgba(255, 193, 7, 0.1);
+            padding: 1rem;
+            border-radius: 4px;
+            border-left: 4px solid #FFC107;
+            margin-top: 1rem;
+        }
+
+        .creator-account-info h4 {
+            margin: 0 0 0.5rem 0;
+            color: #FFC107;
+        }
+
+        .creator-account-info p {
+            margin: 0;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .payment-container {
+                margin: 1rem;
+                padding: 1rem;
+            }
+
+            .payment-methods {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a href="index.html" style="text-decoration: none; color: white;">
+                <h1>🎮 GameHub</h1>
+            </a>
+        </div>
+        <div class="navbar-menu">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="leagues.html" class="nav-link">Leagues</a>
+            <a href="teams.html" class="nav-link">Teams</a>
+            <div id="userMenu" class="user-menu">
+                <a href="dashboard.html" class="nav-link">Dashboard</a>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="message" class="message"></div>
+
+        <div class="payment-container">
+            <div class="payment-header">
+                <h1>Record Payment</h1>
+                <p>Submit your payment details for league participation</p>
+            </div>
+
+            <div id="paymentSummary" class="payment-summary">
+                <h3>Payment Details</h3>
+                <p id="leagueInfo">Loading...</p>
+                <p id="amountInfo">Amount: Loading...</p>
+            </div>
+
+            <div class="payment-instructions">
+                <h4>Payment Instructions</h4>
+                <p>Please make your payment using one of the methods below and then fill out the form with your transaction details.</p>
+                <div id="creatorAccount" class="creator-account-info" style="display: none;">
+                    <h4>Pay to League Creator</h4>
+                    <p id="creatorAccountDetails">Loading creator account details...</p>
+                </div>
+            </div>
+
+            <form id="paymentForm" class="payment-form">
+                <div class="payment-methods">
+                    <div class="method-card" data-method="mpesa">
+                        <div class="method-icon">📱</div>
+                        <div class="method-name">M-Pesa</div>
+                        <div class="method-details">Mobile money payment</div>
+                    </div>
+                    <div class="method-card" data-method="halopesa">
+                        <div class="method-icon">📱</div>
+                        <div class="method-name">HaloPesa</div>
+                        <div class="method-details">Halotel mobile money</div>
+                    </div>
+                    <div class="method-card" data-method="mix-by-yas">
+                        <div class="method-icon">📱</div>
+                        <div class="method-name">Mix by Yas</div>
+                        <div class="method-details">YAS mobile money</div>
+                    </div>
+                    <div class="method-card" data-method="airtel-money">
+                        <div class="method-icon">📱</div>
+                        <div class="method-name">Airtel Money</div>
+                        <div class="method-details">Airtel mobile money</div>
+                    </div>
+                    <div class="method-card" data-method="visa-crdb">
+                        <div class="method-icon">💳</div>
+                        <div class="method-name">Visa (CRDB)</div>
+                        <div class="method-details">CRDB Bank Visa</div>
+                    </div>
+                    <div class="method-card" data-method="visa-nmb">
+                        <div class="method-icon">💳</div>
+                        <div class="method-name">Visa (NMB)</div>
+                        <div class="method-details">NMB Bank Visa</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="paymentMethod">Payment Method *</label>
+                    <select id="paymentMethod" required>
+                        <option value="">Select payment method...</option>
+                        <option value="mpesa">M-Pesa</option>
+                        <option value="halopesa">HaloPesa</option>
+                        <option value="mix-by-yas">Mix by Yas</option>
+                        <option value="airtel-money">Airtel Money</option>
+                        <option value="visa-crdb">Visa (CRDB Bank)</option>
+                        <option value="visa-nmb">Visa (NMB Bank)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="transactionId">Transaction ID / Reference *</label>
+                    <input type="text" id="transactionId" placeholder="Enter transaction ID or reference number" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="amount">Amount Paid *</label>
+                    <input type="number" id="amount" placeholder="Enter amount paid" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Additional Notes (Optional)</label>
+                    <input type="text" id="notes" placeholder="Any additional information">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Payment</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        let paymentData = null;
+
+        // Get payment details from URL
+        const params = new URLSearchParams(window.location.search);
+        const leagueId = params.get('league_id');
+
+        if (!leagueId) {
+            showMessage('Invalid payment request', 'error');
+        }
+
+        // Load payment details
+        async function loadPaymentDetails() {
+            try {
+                const response = await fetch(`/api/leagues/details/${leagueId}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message);
+                }
+
+                const league = data.league;
+                document.getElementById('leagueInfo').textContent = `League: ${league.name}`;
+                document.getElementById('amountInfo').textContent = `Amount: ${league.entry_fee || 3000} TSH`;
+
+                // Set amount field
+                document.getElementById('amount').value = league.entry_fee || 3000;
+
+                paymentData = {
+                    league_id: leagueId,
+                    amount: league.entry_fee || 3000
+                };
+
+                // Load creator account details if league has entry fee
+                if (league.entry_fee && league.entry_fee > 0) {
+                    await loadCreatorAccount(leagueId);
+                }
+            } catch (error) {
+                showMessage('Error loading payment details: ' + error.message, 'error');
+            }
+        }
+
+        // Load creator account details
+        async function loadCreatorAccount(leagueId) {
+            try {
+                const response = await fetch(`/api/leagues/${leagueId}/creator-account`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const account = data.creator_account;
+
+                    let accountDetails = '';
+                    if (account.account_type === 'mpesa') {
+                        accountDetails = `M-Pesa: ${account.account_number} (${account.account_name})`;
+                    } else if (account.account_type === 'halopesa') {
+                        accountDetails = `HaloPesa: ${account.account_number} (${account.account_name})`;
+                    } else if (account.account_type === 'mix-by-yas') {
+                        accountDetails = `Mix by Yas: ${account.account_number} (${account.account_name})`;
+                    } else if (account.account_type === 'airtel-money') {
+                        accountDetails = `Airtel Money: ${account.account_number} (${account.account_name})`;
+                    } else if (account.account_type === 'visa-crdb') {
+                        accountDetails = `Visa CRDB: ${account.account_number} (${account.account_name})`;
+                    } else if (account.account_type === 'visa-nmb') {
+                        accountDetails = `Visa NMB: ${account.account_number} (${account.account_name})`;
+                    }
+
+                    document.getElementById('creatorAccountDetails').textContent = accountDetails;
+                    document.getElementById('creatorAccount').style.display = 'block';
+                }
+            } catch (error) {
+                console.log('Error loading creator account:', error);
+                // Don't show error to user, just hide the section
+                document.getElementById('creatorAccount').style.display = 'none';
+            }
+        }
+
+        // Payment method selection
+        document.querySelectorAll('.method-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                document.getElementById('paymentMethod').value = card.dataset.method;
+            });
+        });
+
+        // Form submission
+        document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!paymentData) {
+                showMessage('Payment details not loaded', 'error');
+                return;
+            }
+
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            const transactionId = document.getElementById('transactionId').value;
+            const amount = document.getElementById('amount').value;
+            const notes = document.getElementById('notes').value;
+
+            if (!paymentMethod || !transactionId || !amount) {
+                showMessage('Please fill in all required fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/payments/record', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        league_id: paymentData.league_id,
+                        amount: amount,
+                        payment_method: paymentMethod,
+                        transaction_id: transactionId,
+                        notes: notes
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showMessage(data.message, 'error');
+                    return;
+                }
+
+                showMessage('Payment recorded successfully! Awaiting admin confirmation.', 'success');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 3000);
+
+            } catch (error) {
+                showMessage('Error recording payment: ' + error.message, 'error');
+            }
+        });
+
+        function showMessage(message, type) {
+            const el = document.getElementById('message');
+            el.textContent = message;
+            el.className = 'message ' + type;
+            el.style.display = 'block';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize
+        loadPaymentDetails();
+    </script>
+</body>
+</html>

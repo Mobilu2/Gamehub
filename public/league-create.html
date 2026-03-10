@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create League - GameHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            background: var(--light-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--dark-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(107, 95, 255, 0.2);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-columns .form-group {
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 600px) {
+            .form-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .info-box {
+            background: rgba(78, 205, 196, 0.1);
+            border: 1px solid var(--accent-color);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .game-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--primary-color);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin: 0.25rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .fee-options {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .fee-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .fee-option:hover {
+            background: rgba(107, 95, 255, 0.1);
+        }
+
+        .fee-option input[type="radio"] {
+            margin: 0;
+        }
+
+        .fee-option span {
+            font-weight: 500;
+        }
+
+        .account-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .account-details select,
+        .account-details input {
+            width: 100%;
+        }
+
+        .game-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .format-info {
+            background: rgba(107, 95, 255, 0.1);
+            padding: 0.75rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .success-message {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            color: #4CAF50;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-message {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #F44336;
+            color: #F44336;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a href="index.html" style="text-decoration: none; color: white;">
+                <h1>🎮 GameHub</h1>
+            </a>
+        </div>
+        <div class="navbar-menu">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="leagues.html" class="nav-link">Leagues</a>
+            <a href="teams.html" class="nav-link">Teams</a>
+            <div id="userMenu" class="user-menu" style="display:none;">
+                <a href="dashboard.html" class="nav-link">Dashboard</a>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </div>
+            <div id="authMenu" class="auth-menu">
+                <a href="login.html" class="btn-login">Login</a>
+                <a href="login.html" class="btn-register">Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Create New League</h1>
+            <p>Set up a competitive league for your game</p>
+        </div>
+
+        <div class="form-container">
+            <div id="successMessage" class="success-message"></div>
+            <div id="errorMessage" class="error-message"></div>
+
+            <div class="info-box">
+                💡 <strong>League Information:</strong> Create a league where players can compete, register teams, and earn prizes. You can choose between free entry (no cost to join) or paid entry (entry fees contribute to the prize pool).
+            </div>
+
+            <form id="leagueForm">
+                <div class="form-group">
+                    <label>League Name</label>
+                    <input type="text" id="leagueName" placeholder="e.g., Championship Series 2026" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="leagueDescription" placeholder="Describe your league..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Game</label>
+                    <div class="game-selector">
+                        <div class="game-badge" data-game="efootball">⚽ eFootball</div>
+                        <div class="game-badge" data-game="cod">🎯 Call of Duty</div>
+                    </div>
+                    <input type="hidden" id="selectedGame" required>
+                </div>
+
+                <div class="form-group">
+                    <label>League Format</label>
+                    <select id="leagueFormat" required>
+                        <option value="">Select format...</option>
+                        <option value="group-stage-16">Group Stage (16 Members)</option>
+                        <option value="group-stage-32">Group Stage (32 Members)</option>
+                        <option value="knockout-16">Knockout (16 Members)</option>
+                        <option value="knockout-32">Knockout (32 Members)</option>
+                        <option value="round-robin">Round Robin (8-16 Members)</option>
+                    </select>
+                    <div id="formatInfo" class="format-info"></div>
+                </div>
+
+                <div class="form-columns">
+                    <div class="form-group">
+                        <label>Max Participants</label>
+                        <input type="number" id="maxParticipants" value="32" min="8" max="128" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Entry Fee Type</label>
+                        <div class="fee-options">
+                            <label class="fee-option">
+                                <input type="radio" name="feeType" value="free" checked>
+                                <span>Free Entry</span>
+                            </label>
+                            <label class="fee-option">
+                                <input type="radio" name="feeType" value="paid">
+                                <span>Paid Entry</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="entryFeeGroup" style="display: none;">
+                    <label>Entry Fee Amount (TSH)</label>
+                    <input type="number" id="entryFee" value="3000" min="100" step="100" placeholder="e.g., 3000">
+                    <small style="color: var(--border-color); font-size: 0.85rem;">Minimum 100 TSH for paid leagues</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Prize Pool Distribution</label>
+                    <input type="text" id="prizePool" placeholder="e.g., 1st: 50%, 2nd: 30%, 3rd: 20%" required>
+                </div>
+
+                <div class="form-group" id="creatorAccountGroup" style="display: none;">
+                    <label>Payment Account Details</label>
+                    <div class="account-details">
+                        <select id="accountType" required>
+                            <option value="">Select payment method</option>
+                            <option value="mpesa">M-Pesa</option>
+                            <option value="halopesa">HaloPesa</option>
+                            <option value="mix">Mix by Yas</option>
+                            <option value="airtel">Airtel Money</option>
+                            <option value="visa_crdb">Visa (CRDB Bank)</option>
+                            <option value="visa_nmb">Visa (NMB Bank)</option>
+                        </select>
+                        <input type="text" id="accountNumber" placeholder="Account/Phone Number" required>
+                        <input type="text" id="accountName" placeholder="Account Holder Name" required>
+                        <input type="text" id="bankName" placeholder="Bank Name (for Visa only)" style="display: none;">
+                    </div>
+                    <small style="color: var(--border-color); font-size: 0.85rem;">This account will receive entry fee payments</small>
+                </div>
+
+                <div class="info-box">
+                    📋 <strong>Important:</strong> You will be the league admin and responsible for approving participants, creating matches, and validating results.
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Create League</button>
+                    <button type="button" class="btn btn-secondary" onclick="history.back()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer style="text-align: center; padding: 2rem; color: var(--border-color); margin-top: 3rem;">
+        <p>&copy; 2026 GameHub. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Check authentication
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // Show user menu
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (userData) {
+            document.getElementById('authMenu').style.display = 'none';
+            document.getElementById('userMenu').style.display = 'flex';
+        }
+
+        // Game selection
+        document.querySelectorAll('.game-badge').forEach(badge => {
+            badge.addEventListener('click', () => {
+                document.querySelectorAll('.game-badge').forEach(b => b.classList.remove('selected'));
+                badge.classList.add('selected');
+                document.getElementById('selectedGame').value = badge.dataset.game;
+            });
+        });
+
+        // Fee type selection
+        document.querySelectorAll('input[name="feeType"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const entryFeeGroup = document.getElementById('entryFeeGroup');
+                const creatorAccountGroup = document.getElementById('creatorAccountGroup');
+                const entryFeeInput = document.getElementById('entryFee');
+
+                if (e.target.value === 'free') {
+                    entryFeeGroup.style.display = 'none';
+                    creatorAccountGroup.style.display = 'none';
+                    entryFeeInput.required = false;
+                    document.getElementById('accountType').required = false;
+                    document.getElementById('accountNumber').required = false;
+                    document.getElementById('accountName').required = false;
+                } else {
+                    entryFeeGroup.style.display = 'block';
+                    creatorAccountGroup.style.display = 'block';
+                    entryFeeInput.required = true;
+                    document.getElementById('accountType').required = true;
+                    document.getElementById('accountNumber').required = true;
+                    document.getElementById('accountName').required = true;
+                }
+            });
+        });
+
+        // Account type selection
+        document.getElementById('accountType').addEventListener('change', (e) => {
+            const bankNameField = document.getElementById('bankName');
+            if (e.target.value.startsWith('visa_')) {
+                bankNameField.style.display = 'block';
+                bankNameField.required = true;
+                bankNameField.placeholder = e.target.value === 'visa_crdb' ? 'CRDB Bank' : 'NMB Bank';
+                bankNameField.value = e.target.value === 'visa_crdb' ? 'CRDB Bank' : 'NMB Bank';
+            } else {
+                bankNameField.style.display = 'none';
+                bankNameField.required = false;
+                bankNameField.value = '';
+            }
+        });
+
+        document.getElementById('leagueFormat').addEventListener('change', (e) => {
+            const info = document.getElementById('formatInfo');
+            const description = formatDescriptions[e.target.value] || '';
+            info.textContent = description;
+        });
+
+        // Form submission
+        document.getElementById('leagueForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const game = document.getElementById('selectedGame').value;
+            if (!game) {
+                showError('Please select a game');
+                return;
+            }
+
+            const feeType = document.querySelector('input[name="feeType"]:checked').value;
+            const entryFee = feeType === 'free' ? 0 : parseFloat(document.getElementById('entryFee').value);
+
+            if (feeType === 'paid' && (!entryFee || entryFee < 100)) {
+                showError('Entry fee must be at least 100 TSH for paid leagues');
+                return;
+            }
+
+            const leagueData = {
+                name: document.getElementById('leagueName').value,
+                description: document.getElementById('leagueDescription').value,
+                game: game,
+                format: document.getElementById('leagueFormat').value,
+                max_participants: parseInt(document.getElementById('maxParticipants').value),
+                entry_fee: entryFee,
+                prize_distribution: document.getElementById('prizePool').value,
+                creator_account: feeType === 'paid' ? {
+                    account_type: document.getElementById('accountType').value,
+                    account_number: document.getElementById('accountNumber').value,
+                    account_name: document.getElementById('accountName').value,
+                    bank_name: document.getElementById('bankName').value || null
+                } : null
+            };
+
+            try {
+                const response = await fetch('/api/leagues/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(leagueData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showError(data.message || 'Error creating league');
+                    return;
+                }
+
+                showSuccess('League created successfully! Redirecting...');
+                setTimeout(() => {
+                    window.location.href = `/league-manage.html?id=${data.leagueId}`;
+                }, 1500);
+
+            } catch (error) {
+                showError('Error: ' + error.message);
+            }
+        });
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 4000);
+        }
+
+        function showSuccess(message) {
+            const successEl = document.getElementById('successMessage');
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

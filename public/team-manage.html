@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Management - GameHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-panel {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+            align-items: start;
+        }
+
+        .sidebar {
+            background: var(--light-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .sidebar-item {
+            padding: 0.75rem 1rem;
+            margin: 0.5rem 0;
+            background: var(--dark-bg);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-item:hover,
+        .sidebar-item.active {
+            background: var(--primary-color);
+            border-left-color: var(--secondary-color);
+            color: white;
+        }
+
+        .content {
+            background: var(--light-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .team-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            color: white;
+        }
+
+        .team-header h2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .team-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--dark-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:hover {
+            background: rgba(var(--primary-color-rgb), 0.1);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-small.primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-small.primary:hover {
+            background: var(--secondary-color);
+        }
+
+        .btn-small.danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-small.danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-small.warning {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-small.warning:hover {
+            background: #d68910;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--dark-bg);
+            color: var(--text-color);
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 1rem;
+            height: 1rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .member-card {
+            background: var(--dark-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .member-info {
+            flex: 1;
+        }
+
+        .member-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .member-role {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            margin-top: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .admin-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+
+            .team-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn-small {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a href="index.html" style="text-decoration: none; color: white;">
+                <h1>🎮 GameHub</h1>
+            </a>
+        </div>
+        <div class="navbar-menu">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="leagues.html" class="nav-link">Leagues</a>
+            <a href="teams.html" class="nav-link">Teams</a>
+            <div id="userMenuTeam" class="user-menu" style="display:none;">
+                <a href="dashboard.html" class="nav-link">Dashboard</a>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </div>
+            <div id="authMenuTeam" class="auth-menu">
+                <a href="login.html" class="btn-login">Login</a>
+                <a href="login.html" class="btn-register">Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Team Header -->
+        <div class="team-header" id="teamHeader">
+            <h2 id="teamName">Team Name</h2>
+            <p id="teamGameInfo">Game: Loading...</p>
+            <div class="team-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="memberCount">0</div>
+                    <div class="stat-label">Members</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="winCount">0</div>
+                    <div class="stat-label">Wins</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="matchCount">0</div>
+                    <div class="stat-label">Matches</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="leagueCount">0</div>
+                    <div class="stat-label">Leagues</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Panel -->
+        <div class="admin-panel">
+            <div class="sidebar">
+                <div class="sidebar-item active" onclick="showSection('overview')">📊 Overview</div>
+                <div class="sidebar-item" onclick="showSection('members')">👥 Members</div>
+                <div class="sidebar-item" onclick="showSection('settings')">⚙️ Settings</div>
+                <div class="sidebar-item" onclick="showSection('matches')">🏆 Matches</div>
+                <div class="sidebar-item" onclick="showSection('danger')">⚠️ Danger Zone</div>
+            </div>
+
+            <div class="content">
+                <!-- Overview Section -->
+                <div id="overview" class="section active">
+                    <h3>Team Overview</h3>
+                    <div id="overviewContent" class="loading">
+                        <div class="spinner"></div>
+                        Loading team data...
+                    </div>
+                </div>
+
+                <!-- Members Section -->
+                <div id="members" class="section">
+                    <h3>Team Members</h3>
+                    <div id="membersContent" class="loading">
+                        <div class="spinner"></div>
+                        Loading members...
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="settings" class="section">
+                    <h3>Team Settings</h3>
+                    <form id="settingsForm">
+                        <div class="form-group">
+                            <label for="teamNameInput">Team Name</label>
+                            <input type="text" id="teamNameInput" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="teamDescInput">Description</label>
+                            <textarea id="teamDescInput"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="maxMembersInput">Max Members</label>
+                            <input type="number" id="maxMembersInput" min="2" max="20" required>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <button type="button" class="btn btn-secondary" onclick="window.location.href='teams.html'">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Matches Section -->
+                <div id="matches" class="section">
+                    <h3>Team Matches</h3>
+                    <div id="matchesContent" class="loading">
+                        <div class="spinner"></div>
+                        Loading matches...
+                    </div>
+                </div>
+
+                <!-- Danger Zone Section -->
+                <div id="danger" class="section" style="display: none;">
+                    <h3 style="color: #e74c3c;">Danger Zone</h3>
+                    <div style="background: rgba(231, 76, 60, 0.1); padding: 1.5rem; border-radius: 8px; border-left: 4px solid #e74c3c;">
+                        <h4 style="color: #e74c3c; margin-top: 0;">Disband Team</h4>
+                        <p>This action cannot be undone. All team data will be lost.</p>
+                        <button class="btn btn-danger" onclick="disbandTeam()" style="margin-top: 1rem;">Disband Team</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 GameHub. All rights reserved.</p>
+    </footer>
+
+    <script src="js/auth.js"></script>
+    <script src="js/team-manage.js"></script>
+</body>
+</html>
