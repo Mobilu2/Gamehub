@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Bracket - GameHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .bracket-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+
+        .bracket-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .bracket-info {
+            background: var(--light-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: var(--border-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .bracket-section {
+            background: var(--light-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .matches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .match-card {
+            background: var(--dark-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .match-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(107, 95, 255, 0.2);
+        }
+
+        .match-header {
+            background: rgba(107, 95, 255, 0.1);
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .match-number {
+            font-size: 0.85rem;
+            color: var(--border-color);
+            font-weight: 600;
+        }
+
+        .match-participants {
+            padding: 1rem;
+        }
+
+        .participant {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: rgba(107, 95, 255, 0.05);
+            border-radius: 4px;
+            border-left: 3px solid var(--border-color);
+        }
+
+        .participant.winner {
+            background: rgba(76, 175, 80, 0.1);
+            border-left-color: #4CAF50;
+        }
+
+        .participant-name {
+            font-weight: 500;
+            flex-grow: 1;
+        }
+
+        .participant-score {
+            background: var(--light-bg);
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-left: 0.5rem;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .match-actions {
+            padding: 0.75rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .match-status {
+            font-size: 0.85rem;
+            color: var(--border-color);
+            padding: 0.75rem;
+            text-align: center;
+            background: rgba(107, 95, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-scheduled {
+            background: rgba(255, 193, 7, 0.2);
+            color: #FFC107;
+        }
+
+        .badge-completed {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+
+        .badge-pending {
+            background: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--border-color);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .action-button {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            background: var(--primary-color);
+            color: white;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .action-button:hover {
+            background: var(--secondary-color);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            color: #4CAF50;
+        }
+
+        .error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #F44336;
+            color: #F44336;
+        }
+
+        .bracket-structure {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            overflow-x: auto;
+            padding: 1rem 0;
+        }
+
+        .round-column {
+            flex: 0 0 auto;
+            min-width: 320px;
+        }
+
+        @media (max-width: 1024px) {
+            .matches-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a href="index.html" style="text-decoration: none; color: white;">
+                <h1>🎮 GameHub</h1>
+            </a>
+        </div>
+        <div class="navbar-menu">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="leagues.html" class="nav-link">Leagues</a>
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+            <button onclick="logout()" class="btn-logout">Logout</button>
+        </div>
+    </nav>
+
+    <div class="bracket-container">
+        <div class="bracket-header">
+            <h1>🏆 Tournament Bracket</h1>
+            <p id="leagueName">Loading league information...</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="bracket-info">
+            <div class="info-item">
+                <div class="info-label">Total Participants</div>
+                <div class="info-value" id="participantCount">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Current Round</div>
+                <div class="info-value" id="currentRound">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Tournament Format</div>
+                <div class="info-value" id="format">Knockout</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Status</div>
+                <div class="info-value" id="status">Active</div>
+            </div>
+        </div>
+
+        <!-- Round of 32 -->
+        <div class="bracket-section" id="round-32-section" style="display: none;">
+            <div class="section-title">🎯 Round of 32</div>
+            <p style="color: var(--border-color); margin-bottom: 1rem;">32 teams play against each other. They are paired into 16 matches. Each match eliminates one team. 16 winners move to the next round.</p>
+            <div class="matches-grid" id="round-32-matches">
+                <div class="empty-state">
+                    <div class="loading-spinner"></div>
+                    <p>Loading matches...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Round of 16 -->
+        <div class="bracket-section" id="round-16-section" style="display: none;">
+            <div class="section-title">⭐ Round of 16</div>
+            <p style="color: var(--border-color); margin-bottom: 1rem;">Now 16 teams remain. They play 8 matches. 8 winners advance.</p>
+            <div class="matches-grid" id="round-16-matches">
+                <div class="empty-state">
+                    <p>Matches will appear after Round of 32 is complete</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quarterfinals -->
+        <div class="bracket-section" id="quarterfinals-section" style="display: none;">
+            <div class="section-title">🥇 Quarterfinals</div>
+            <p style="color: var(--border-color); margin-bottom: 1rem;">8 teams compete. They play 4 matches. 4 winners advance.</p>
+            <div class="matches-grid" id="quarterfinals-matches">
+                <div class="empty-state">
+                    <p>Matches will appear after Round of 16 is complete</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Semifinals -->
+        <div class="bracket-section" id="semifinals-section" style="display: none;">
+            <div class="section-title">🥈 Semifinals</div>
+            <p style="color: var(--border-color); margin-bottom: 1rem;">4 teams compete. They play 2 matches. 2 winners advance to the final.</p>
+            <div class="matches-grid" id="semifinals-matches">
+                <div class="empty-state">
+                    <p>Matches will appear after Quarterfinals are complete</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Final -->
+        <div class="bracket-section" id="final-section" style="display: none;">
+            <div class="section-title">🏆 Final</div>
+            <p style="color: var(--border-color); margin-bottom: 1rem;">The last 2 teams play one match. The winner becomes the champion of the tournament.</p>
+            <div class="matches-grid" id="final-matches">
+                <div class="empty-state">
+                    <p>Match will appear after Semifinals are complete</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        const API_URL = 'http://localhost:3000/api';
+
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        let leagueId = null;
+
+        // Get league ID from URL
+        const params = new URLSearchParams(window.location.search);
+        leagueId = params.get('league_id');
+
+        if (!leagueId) {
+            showMessage('Invalid league ID', 'error');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBracket();
+        });
+
+        async function loadBracket() {
+            try {
+                // Get league details
+                const leagueResponse = await fetch(`${API_URL}/leagues/details/${leagueId}`);
+                const leagueData = await leagueResponse.json();
+                document.getElementById('leagueName').textContent = leagueData.league.name;
+
+                // Get bracket
+                const bracketResponse = await fetch(`${API_URL}/leagues/${leagueId}/bracket`);
+                if (bracketResponse.status === 404) {
+                    showMessage('Tournament bracket not yet created. Please create it in league settings.', 'error');
+                    return;
+                }
+
+                const bracketData = await bracketResponse.json();
+                const bracket = bracketData.bracket;
+
+                // Update info
+                document.getElementById('participantCount').textContent = bracket.total_participants;
+                document.getElementById('currentRound').textContent = formatRoundName(bracket.current_round);
+                document.getElementById('format').textContent = 'Knockout Tournament';
+                document.getElementById('status').textContent = bracket.status === 'active' ? 'Active' : 'Completed';
+
+                // Display rounds based on participant count
+                const roundsToShow = getRoundsToShow(bracket.total_participants);
+
+                // Show relevant sections
+                if (roundsToShow.includes('round-32')) {
+                    document.getElementById('round-32-section').style.display = 'block';
+                    displayMatches(bracketData.rounds['round-32'], 'round-32-matches');
+                }
+                if (roundsToShow.includes('round-16')) {
+                    document.getElementById('round-16-section').style.display = 'block';
+                    displayMatches(bracketData.rounds['round-16'], 'round-16-matches');
+                }
+                if (roundsToShow.includes('quarterfinals')) {
+                    document.getElementById('quarterfinals-section').style.display = 'block';
+                    displayMatches(bracketData.rounds['quarterfinals'], 'quarterfinals-matches');
+                }
+                if (roundsToShow.includes('semifinals')) {
+                    document.getElementById('semifinals-section').style.display = 'block';
+                    displayMatches(bracketData.rounds['semifinals'], 'semifinals-matches');
+                }
+                if (roundsToShow.includes('final')) {
+                    document.getElementById('final-section').style.display = 'block';
+                    displayMatches(bracketData.rounds['final'], 'final-matches');
+                }
+
+            } catch (error) {
+                console.error('Error loading bracket:', error);
+                showMessage('Error loading tournament bracket: ' + error.message, 'error');
+            }
+        }
+
+        function getRoundsToShow(participantCount) {
+            const rounds = [];
+            if (participantCount >= 32) rounds.push('round-32');
+            if (participantCount >= 16) rounds.push('round-16');
+            if (participantCount >= 8) rounds.push('quarterfinals');
+            if (participantCount >= 4) rounds.push('semifinals');
+            if (participantCount >= 2) rounds.push('final');
+            return rounds;
+        }
+
+        function formatRoundName(round) {
+            const names = {
+                'round-32': 'Round of 32',
+                'round-16': 'Round of 16',
+                'quarterfinals': 'Quarterfinals',
+                'semifinals': 'Semifinals',
+                'final': 'Final'
+            };
+            return names[round] || round;
+        }
+
+        function displayMatches(matches, containerId) {
+            const container = document.getElementById(containerId);
+            
+            if (!matches || matches.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No matches scheduled yet</p></div>';
+                return;
+            }
+
+            container.innerHTML = matches.map(match => `
+                <div class="match-card">
+                    <div class="match-header">
+                        <div class="match-number">Match #${match.match_number}</div>
+                    </div>
+                    <div class="match-participants">
+                        <div class="participant ${match.winner_id === match.user_1_id ? 'winner' : ''}">
+                            <span class="participant-name">
+                                ${match.player1_name || `Seed #${match.seed_1}`}
+                            </span>
+                            ${match.result_status === 'approved' ? 
+                                `<span class="participant-score">${match.score_team_1 || '0'}</span>` : 
+                                '<span class="participant-score">-</span>'}
+                        </div>
+                        <div class="participant ${match.winner_id === match.user_2_id ? 'winner' : ''}">
+                            <span class="participant-name">
+                                ${match.player2_name || `Seed #${match.seed_2}`}
+                            </span>
+                            ${match.result_status === 'approved' ? 
+                                `<span class="participant-score">${match.score_team_2 || '0'}</span>` : 
+                                '<span class="participant-score">-</span>'}
+                        </div>
+                    </div>
+                    <div class="match-status">
+                        <span class="status-badge badge-${match.status}">
+                            ${match.status.toUpperCase()}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showMessage(message, type) {
+            const el = document.getElementById('message');
+            el.textContent = message;
+            el.className = `message ${type}`;
+            el.style.display = 'block';
+
+            if (type === 'success') {
+                setTimeout(() => {
+                    el.style.display = 'none';
+                }, 4000);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Auto-refresh bracket every 10 seconds
+        setInterval(loadBracket, 10000);
+    </script>
+</body>
+</html>
