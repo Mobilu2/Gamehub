@@ -1,38 +1,23 @@
 {
-  "name": "@npmcli/fs",
-  "version": "1.1.1",
-  "description": "filesystem utilities for the npm cli",
-  "main": "lib/index.js",
-  "files": [
-    "bin",
-    "lib"
-  ],
+  "name": "gamehub-backend",
+  "version": "1.0.0",
+  "description": "Gaming platform backend",
+  "main": "server.js",
   "scripts": {
-    "preversion": "npm test",
-    "postversion": "npm publish",
-    "prepublishOnly": "git push origin --follow-tags",
-    "snap": "tap",
-    "test": "tap",
-    "npmclilint": "npmcli-lint",
-    "lint": "eslint '**/*.js'",
-    "lintfix": "npm run lint -- --fix",
-    "posttest": "npm run lint",
-    "postsnap": "npm run lintfix --",
-    "postlint": "npm-template-check"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
-  "keywords": [
-    "npm",
-    "oss"
-  ],
-  "author": "GitHub Inc.",
+  "keywords": ["gaming", "leagues", "teams"],
+  "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "@npmcli/template-oss": "^2.3.1",
-    "tap": "^15.0.9"
-  },
   "dependencies": {
-    "@gar/promisify": "^1.0.1",
-    "semver": "^7.3.5"
-  },
-  "templateVersion": "2.3.1"
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.0.3",
+    "multer": "^1.4.5-lts.1"
+  }
 }
