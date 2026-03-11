@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - GameHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin: 0.25rem;
+        }
+
+        .status-badge.approved {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+
+        .status-badge.pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #FFC107;
+        }
+
+        .status-badge.paid {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+
+        .status-badge.unpaid {
+            background: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-small:hover {
+            background: var(--secondary-color);
+        }
+
+        .profile-avatar-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            border: 4px solid var(--primary-color);
+        }
+
+        .profile-avatar-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            border: 2px solid var(--primary-color);
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .upload-status {
+            padding: 0.75rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .upload-status.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            color: #4CAF50;
+        }
+
+        .upload-status.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #F44336;
+            color: #F44336;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a href="index.html" style="text-decoration: none; color: white;">
+                <h1>🎮 GameHub</h1>
+            </a>
+        </div>
+        <div class="navbar-menu">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="leagues.html" class="nav-link">Leagues</a>
+            <a href="teams.html" class="nav-link">Teams</a>
+            <a href="dashboard.html" class="nav-link active">Dashboard</a>
+            <button onclick="logout()" class="btn-logout">Logout</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <aside class="dashboard-sidebar">
+            <div class="user-profile">
+                <div class="profile-avatar">👤</div>
+                <h3 id="userUsername">Player Name</h3>
+                <p id="userEmail">email@example.com</p>
+            </div>
+            <nav class="dashboard-menu">
+                <a href="#" class="menu-item active" onclick="showSection('profile')">Profile</a>
+                <a href="profile-settings.html" class="menu-item">⚙️ Settings</a>
+                <a href="#" class="menu-item" onclick="showSection('teams')">My Teams</a>
+                <a href="#" class="menu-item" onclick="showSection('leagues')">My Leagues</a>
+                <a href="#" class="menu-item" onclick="showSection('stats')">Statistics</a>
+            </nav>
+        </aside>
+
+        <main class="dashboard-content">
+            <!-- Profile Section -->
+            <section id="profile-section" class="dashboard-section active">
+                <h2>User Profile</h2>
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div class="profile-avatar-large" id="profileAvatar">👤</div>
+                        <div class="profile-info">
+                            <h3 id="profileUsername">Player Name</h3>
+                            <p id="profileEmail">email@example.com</p>
+                            <p id="profileLocation" style="color: var(--border-color);">📍 Location: Not set</p>
+                            <p id="joinDate">Joined: Loading...</p>
+                        </div>
+                    </div>
+                    <div class="profile-actions">
+                        <label for="profilePictureInput" class="btn btn-secondary" style="cursor: pointer;">
+                            📷 Change Profile Picture
+                        </label>
+                        <input type="file" id="profilePictureInput" accept="image/*" style="display: none;">
+                        <a href="profile-settings.html" class="btn btn-primary">⚙️ Profile Settings</a>
+                    </div>
+                    <div id="uploadStatus" class="upload-status" style="display: none; margin-top: 1rem;"></div>
+                </div>
+            </section>
+
+            <!-- Teams Section -->
+            <section id="teams-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2>My Teams</h2>
+                    <button class="btn btn-primary" onclick="showCreateTeamModal()">Create Team</button>
+                </div>
+                <div id="teamsList" class="teams-list">
+                    <p>No teams yet. Create or join a team!</p>
+                </div>
+            </section>
+
+            <!-- Leagues Section -->
+            <section id="leagues-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2>My Leagues</h2>
+                    <a href="leagues.html" class="btn btn-secondary">Browse All Leagues</a>
+                </div>
+                <div id="leaguesList" class="leagues-list">
+                    <p>You haven't joined any leagues yet.</p>
+                </div>
+            </section>
+
+            <!-- Stats Section -->
+            <section id="stats-section" class="dashboard-section">
+                <h2>Your Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="statTeams">0</div>
+                        <div class="stat-label">Teams</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statLeagues">0</div>
+                        <div class="stat-label">Leagues</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statWins">0</div>
+                        <div class="stat-label">Wins</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statRank">N/A</div>
+                        <div class="stat-label">Rank</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Create Team Modal -->
+    <div id="teamModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('teamModal')">&times;</span>
+            <h2>Create a New Team</h2>
+            <form id="createTeamForm">
+                <div class="form-group">
+                    <label for="teamName">Team Name:</label>
+                    <input type="text" id="teamName" required>
+                </div>
+                <div class="form-group">
+                    <label for="teamGame">Game:</label>
+                    <select id="teamGame" required>
+                        <option value="">Select a game</option>
+                        <option value="efootball">eFootball</option>
+                        <option value="call of duty">Call of Duty</option>
+                        <option value="valorant">Valorant</option>
+                        <option value="csgo">CS:GO</option>
+                        <option value="lol">League of Legends</option>
+                        <option value="dota2">Dota 2</option>
+                        <option value="fortnite">Fortnite</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="teamDescription">Description:</label>
+                    <textarea id="teamDescription" rows="4"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Team</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

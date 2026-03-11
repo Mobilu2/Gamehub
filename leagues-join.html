@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join League - GameHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .league-card {
+            background: var(--light-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .league-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 15px rgba(107, 95, 255, 0.2);
+        }
+
+        .league-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .league-title {
+            flex: 1;
+        }
+
+        .league-title h3 {
+            margin-bottom: 0.25rem;
+            font-size: 1.3rem;
+        }
+
+        .league-game {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--primary-color);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .league-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-item {
+            background: var(--dark-bg);
+            padding: 0.75rem;
+            border-radius: 4px;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: var(--border-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .league-description {
+            color: var(--border-color);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .league-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .league-participants {
+            font-size: 0.9rem;
+            color: var(--border-color);
+        }
+
+        .join-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .join-btn:hover {
+            background: var(--secondary-color);
+        }
+
+        .join-btn:disabled {
+            background: var(--border-color);
+            cursor: not-allowed;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .search-input, .filter-select {
+            padding: 0.75rem 1rem;
+            background: var(--light-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-select:focus, .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .leagues-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--border-color);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .badge-open {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+
+        .badge-closed {
+            background: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+        }
+
+        .badge-full {
+            background: rgba(255, 193, 7, 0.2);
+            color: #FFC107;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--light-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-header {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--dark-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            color: #4CAF50;
+        }
+
+        .error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #F44336;
+            color: #F44336;
+        }
+
+        @media (max-width: 768px) {
+            .league-header {
+                flex-direction: column;
+            }
+
+            .league-info {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .search-input {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a href="index.html" style="text-decoration: none; color: white;">
+                <h1>🎮 GameHub</h1>
+            </a>
+        </div>
+        <div class="navbar-menu">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="leagues.html" class="nav-link active">Leagues</a>
+            <a href="teams.html" class="nav-link">Teams</a>
+            <div id="userMenu" class="user-menu" style="display:none;">
+                <a href="dashboard.html" class="nav-link">Dashboard</a>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </div>
+            <div id="authMenu" class="auth-menu">
+                <a href="login.html" class="btn-login">Login</a>
+                <a href="login.html" class="btn-register">Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Gaming Leagues</h1>
+            <p>Join competitive leagues in eFootball and Call of Duty</p>
+            <button id="createLeagueBtn" class="btn btn-primary" style="display:none;" onclick="window.location.href='league-create.html'">Create League</button>
+        </div>
+
+        <div class="leagues-container">
+            <div class="filters">
+                <input type="text" id="searchLeague" placeholder="Search leagues..." class="search-input">
+                <select id="gameFilter" class="filter-select">
+                    <option value="">All Games</option>
+                    <option value="efootball">⚽ eFootball</option>
+                    <option value="cod">🎯 Call of Duty</option>
+                </select>
+                <select id="statusFilter" class="filter-select">
+                    <option value="">All Status</option>
+                    <option value="open">Open</option>
+                    <option value="closed">Closed</option>
+                </select>
+            </div>
+
+            <div id="message" class="message"></div>
+            <div id="leaguesContainer" class="leagues-container">
+                <!-- Leagues will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Join League Modal -->
+    <div id="joinModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Join League</div>
+            <div id="joinMessage" class="message"></div>
+            <div class="modal-body">
+                <div id="leagueDetails"></div>
+                <div class="form-group">
+                    <label>Payment Method</label>
+                    <select id="paymentMethod" required>
+                        <option value="">Select payment method...</option>
+                        <option value="mobile-money">Mobile Money</option>
+                        <option value="bank-transfer">Bank Transfer</option>
+                        <option value="cash">Cash Payment</option>
+                    </select>
+                </div>
+                <div style="background: rgba(78, 205, 196, 0.1); padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+                    <p><strong>Entry Fee:</strong> <span id="feeAmount">3000 TSH</span></p>
+                    <p style="font-size: 0.85rem; color: var(--border-color); margin-top: 0.5rem;">You will need to pay this fee to participate</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="confirmJoinLeague()">Confirm Join</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <footer style="text-align: center; padding: 2rem; color: var(--border-color); margin-top: 3rem;">
+        <p>&copy; 2026 GameHub. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Check authentication
+        const token = localStorage.getItem('token');
+        const userData = JSON.parse(localStorage.getItem('user'));
+
+        if (userData) {
+            document.getElementById('authMenu').style.display = 'none';
+            document.getElementById('userMenu').style.display = 'flex';
+            document.getElementById('createLeagueBtn').style.display = 'inline-block';
+        }
+
+        let leagues = [];
+        let selectedLeagueForJoin = null;
+
+        // Load leagues
+        async function loadLeagues() {
+            try {
+                const response = await fetch('/api/leagues/all');
+                const data = await response.json();
+
+                leagues = data.leagues || [];
+                displayLeagues(leagues);
+            } catch (error) {
+                showMessage('Error loading leagues: ' + error.message, 'error');
+            }
+        }
+
+        function displayLeagues(leaguesToShow) {
+            const container = document.getElementById('leaguesContainer');
+
+            if (leaguesToShow.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🏆</div>
+                        <h3>No Leagues Found</h3>
+                        <p>No leagues match your criteria. Check back soon!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = leaguesToShow.map(league => `
+                <div class="league-card">
+                    <div class="league-header">
+                        <div class="league-title">
+                            <h3>${league.name}</h3>
+                            <span class="league-game">${league.game === 'efootball' ? '⚽ eFootball' : '🎯 Call of Duty'}</span>
+                        </div>
+                        <div>
+                            <span class="status-badge badge-open">Open</span>
+                        </div>
+                    </div>
+
+                    <p class="league-description">${league.description || 'No description available'}</p>
+
+                    <div class="league-info">
+                        <div class="info-item">
+                            <div class="info-label">Entry Fee</div>
+                            <div class="info-value">3000 TSH</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Prize Pool</div>
+                            <div class="info-value">${league.prize_pool || 'TBD'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Format</div>
+                            <div class="info-value">Tournament</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Participants</div>
+                            <div class="info-value">0/32</div>
+                        </div>
+                    </div>
+
+                    <div class="league-footer">
+                        <div class="league-participants">
+                            Created: ${new Date(league.created_at).toLocaleDateString()}
+                        </div>
+                        <button class="join-btn" onclick="openJoinModal(${league.id}, '${league.name}', 3000)">${token ? 'Join League' : 'Login to Join'}</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Filters
+        document.getElementById('searchLeague').addEventListener('input', filterLeagues);
+        document.getElementById('gameFilter').addEventListener('change', filterLeagues);
+        document.getElementById('statusFilter').addEventListener('change', filterLeagues);
+
+        function filterLeagues() {
+            const search = document.getElementById('searchLeague').value.toLowerCase();
+            const game = document.getElementById('gameFilter').value;
+
+            const filtered = leagues.filter(league => {
+                const matchesSearch = league.name.toLowerCase().includes(search) ||
+                                    (league.description && league.description.toLowerCase().includes(search));
+                const matchesGame = !game || league.game === game;
+
+                return matchesSearch && matchesGame;
+            });
+
+            displayLeagues(filtered);
+        }
+
+        function openJoinModal(leagueId, leagueName, entryFee) {
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            selectedLeagueForJoin = leagueId;
+            
+            if (entryFee === 0) {
+                // Free league - join directly
+                document.getElementById('leagueDetails').innerHTML = `
+                    <p><strong>League:</strong> ${leagueName}</p>
+                    <p><strong>Entry Fee:</strong> Free</p>
+                    <p>Click confirm to join this league.</p>
+                `;
+                document.getElementById('paymentSection').style.display = 'none';
+                document.getElementById('confirmBtn').textContent = 'Join League (Free)';
+            } else {
+                // Paid league - show payment options
+                document.getElementById('leagueDetails').innerHTML = `
+                    <p><strong>League:</strong> ${leagueName}</p>
+                    <p><strong>Entry Fee:</strong> ${entryFee} TSH</p>
+                    <p>Please select your payment method to join.</p>
+                `;
+                document.getElementById('feeAmount').textContent = entryFee + ' TSH';
+                document.getElementById('paymentSection').style.display = 'block';
+                document.getElementById('confirmBtn').textContent = 'Proceed to Payment';
+            }
+            
+            document.getElementById('joinModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('joinModal').classList.remove('active');
+            document.getElementById('joinMessage').style.display = 'none';
+        }
+
+        async function confirmJoinLeague() {
+            if (!selectedLeagueForJoin) return;
+
+            // Check if this is a free league (no payment method required)
+            const feeAmount = document.getElementById('feeAmount').textContent;
+            const isFree = feeAmount.includes('Free') || feeAmount === '0 TSH';
+
+            if (!isFree) {
+                const paymentMethod = document.getElementById('paymentMethod').value;
+                if (!paymentMethod) {
+                    showJoinMessage('Please select a payment method', 'error');
+                    return;
+                }
+            }
+
+            try {
+                const response = await fetch(`/api/leagues/${selectedLeagueForJoin}/join-efootball`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showJoinMessage(data.message, 'error');
+                    return;
+                }
+
+                if (isFree) {
+                    // Free league - joined successfully
+                    showJoinMessage('Successfully joined league!', 'success');
+                    setTimeout(() => {
+                        closeModal();
+                        window.location.href = 'leagues.html';
+                    }, 2000);
+                } else {
+                    // Paid league - redirect to payment
+                    showJoinMessage('Successfully joined league! Please complete your payment.', 'success');
+                    setTimeout(() => {
+                        closeModal();
+                        window.location.href = `payment.html?league_id=${selectedLeagueForJoin}`;
+                    }, 2000);
+                }
+
+            } catch (error) {
+                showJoinMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        function showMessage(message, type) {
+            const el = document.getElementById('message');
+            el.textContent = message;
+            el.className = 'message ' + type;
+            el.style.display = 'block';
+        }
+
+        function showJoinMessage(message, type) {
+            const el = document.getElementById('joinMessage');
+            el.textContent = message;
+            el.className = 'message ' + type;
+            el.style.display = 'block';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize
+        loadLeagues();
+    </script>
+</body>
+</html>

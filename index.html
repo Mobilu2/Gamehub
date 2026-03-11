@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameHub - Join Leagues & Teams</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <h1>🎮 GameHub</h1>
+        </div>
+        <div class="navbar-menu">
+            <a href="index.html" class="nav-link active">Home</a>
+            <a href="leagues.html" class="nav-link">Leagues</a>
+            <a href="teams.html" class="nav-link">Teams</a>
+            <div id="userMenu" class="user-menu" style="display:none;">
+                <a href="dashboard.html" class="nav-link">Dashboard</a>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </div>
+            <div id="authMenu" class="auth-menu">
+                <a href="login.html" class="btn-login">Login</a>
+                <a href="login.html" class="btn-register">Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Welcome to GameHub</h2>
+            <p>Your ultimate platform for gaming, leagues, and competitive teams</p>
+            <div class="hero-buttons">
+                <a href="login.html" class="btn btn-primary">Get Started</a>
+                <a href="leagues.html" class="btn btn-secondary">Browse Leagues</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="features">
+        <h2>Why Choose GameHub?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <h3>Create Teams</h3>
+                <p>Assemble your squad and invite players to join your competitive team</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🏆</div>
+                <h3>Join Leagues</h3>
+                <p>Participate in various gaming leagues and compete with players worldwide</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Track Stats</h3>
+                <p>Monitor your performance and climb the rankings with detailed statistics</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Tournaments</h3>
+                <p>Participate in exclusive tournaments with prizes and recognition</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>&copy; 2026 GameHub. All rights reserved.</p>
+    </footer>
+
+    <script src="js/auth.js"></script>
+    <script>
+        // Check if user is logged in
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const userMenu = document.getElementById('userMenu');
+            const authMenu = document.getElementById('authMenu');
+            
+            if (token) {
+                userMenu.style.display = 'flex';
+                authMenu.style.display = 'none';
+            } else {
+                userMenu.style.display = 'none';
+                authMenu.style.display = 'flex';
+            }
+        }
+        
+        checkAuth();
+    </script>
+</body>
+</html>

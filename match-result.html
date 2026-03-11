@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Match Result - GameHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .result-container {
+            max-width: 700px;
+            margin: 2rem auto;
+            background: var(--light-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .match-info {
+            background: var(--dark-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .match-teams {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+            font-size: 1.1rem;
+        }
+
+        .team-name {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .vs-separator {
+            text-align: center;
+            color: var(--border-color);
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--dark-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(107, 95, 255, 0.2);
+        }
+
+        .score-input {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .score-row {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .score-field {
+            text-align: center;
+        }
+
+        .score-field label {
+            font-size: 0.9rem;
+        }
+
+        .vs-text {
+            text-align: center;
+            font-weight: bold;
+            color: var(--border-color);
+        }
+
+        .file-upload {
+            position: relative;
+            border: 2px dashed var(--primary-color);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(107, 95, 255, 0.05);
+        }
+
+        .file-upload:hover {
+            background: rgba(107, 95, 255, 0.1);
+            border-color: var(--secondary-color);
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-preview {
+            margin-top: 1rem;
+        }
+
+        .preview-img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+
+        .preview-name {
+            font-size: 0.9rem;
+            color: var(--border-color);
+            word-break: break-all;
+        }
+
+        .info-box {
+            background: rgba(78, 205, 196, 0.1);
+            border: 1px solid var(--accent-color);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .success-message, .error-message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success-message {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            color: #4CAF50;
+        }
+
+        .error-message {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #F44336;
+            color: #F44336;
+        }
+
+        .match-details {
+            font-size: 0.9rem;
+            color: var(--border-color);
+            margin-top: 0.5rem;
+        }
+
+        .form-section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 1.5rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a href="index.html" style="text-decoration: none; color: white;">
+                <h1>🎮 GameHub</h1>
+            </a>
+        </div>
+        <div class="navbar-menu">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="leagues.html" class="nav-link">Leagues</a>
+            <a href="teams.html" class="nav-link">Teams</a>
+            <div id="userMenu" class="user-menu">
+                <a href="dashboard.html" class="nav-link">Dashboard</a>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Submit Match Result</h1>
+            <p>Report your match outcome with evidence</p>
+        </div>
+
+        <div class="result-container">
+            <div id="successMsg" class="success-message"></div>
+            <div id="errorMsg" class="error-message"></div>
+
+            <div class="match-info">
+                <h3 id="matchTitle">Match Details</h3>
+                <div class="match-teams">
+                    <div class="team-name" id="team1Name">-</div>
+                    <div class="vs-separator">VS</div>
+                    <div class="team-name" id="team2Name">-</div>
+                </div>
+                <div class="match-details">
+                    <p><strong>Stage:</strong> <span id="matchStage">-</span></p>
+                    <p><strong>Scheduled Date:</strong> <span id="matchDate">-</span></p>
+                    <p><strong>Venue:</strong> <span id="matchVenue">-</span></p>
+                </div>
+            </div>
+
+            <div class="info-box">
+                📋 <strong>Important:</strong> Submit the final score along with a screenshot as proof. Admins will review and approve the result.
+            </div>
+
+            <form id="resultForm">
+                <div class="form-section-title">Final Score</div>
+
+                <div class="score-row">
+                    <div class="score-field">
+                        <label for="score1" id="scoreLabel1">-</label>
+                        <input type="number" id="score1" class="score-input" min="0" required>
+                    </div>
+                    <div class="vs-text">-</div>
+                    <div class="score-field">
+                        <label for="score2" id="scoreLabel2">-</label>
+                        <input type="number" id="score2" class="score-input" min="0" required>
+                    </div>
+                </div>
+
+                <div class="form-section-title">Match Details</div>
+
+                <div class="form-group">
+                    <label for="resultDetails">Result Details</label>
+                    <textarea id="resultDetails" placeholder="Describe the match outcome, any notable events, etc..."></textarea>
+                </div>
+
+                <div class="form-section-title">Evidence</div>
+
+                <div class="form-group">
+                    <label>Upload Screenshot/Evidence</label>
+                    <div class="file-upload" id="fileUploadArea">
+                        <div class="file-upload-icon">📸</div>
+                        <p>Click to upload or drag and drop</p>
+                        <p style="font-size: 0.85rem; color: var(--border-color);">PNG, JPG, GIF up to 10MB</p>
+                        <input type="file" id="screenshotInput" accept="image/*" required>
+                    </div>
+                    <div id="filePreview" class="file-preview"></div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Submit Result</button>
+                    <button type="button" class="btn btn-secondary" onclick="history.back()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        let currentMatchId = null;
+        let selectedFile = null;
+
+        // Get match ID from URL
+        const params = new URLSearchParams(window.location.search);
+        currentMatchId = params.get('matchId');
+
+        if (!currentMatchId) {
+            document.getElementById('errorMsg').textContent = 'Invalid match ID';
+            document.getElementById('errorMsg').style.display = 'block';
+        }
+
+        // File upload handling
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const screenshotInput = document.getElementById('screenshotInput');
+
+        fileUploadArea.addEventListener('click', () => {
+            screenshotInput.click();
+        });
+
+        // Drag and drop
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.style.background = 'rgba(107, 95, 255, 0.2)';
+        });
+
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.style.background = 'rgba(107, 95, 255, 0.05)';
+        });
+
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.style.background = 'rgba(107, 95, 255, 0.05)';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                screenshotInput.files = files;
+                handleFileSelect({ target: { files: files } });
+            }
+        });
+
+        screenshotInput.addEventListener('change', handleFileSelect);
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                const preview = document.getElementById('filePreview');
+                
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    preview.innerHTML = `
+                        <img src="${event.target.result}" alt="Preview" class="preview-img">
+                        <div class="preview-name">${file.name}</div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Load match details
+        async function loadMatchDetails() {
+            // Simulating match details loading
+            // In real app, this would fetch from API
+            document.getElementById('team1Name').textContent = 'Team Alpha';
+            document.getElementById('team2Name').textContent = 'Team Beta';
+            document.getElementById('scoreLabel1').textContent = 'Team Alpha Score';
+            document.getElementById('scoreLabel2').textContent = 'Team Beta Score';
+            document.getElementById('matchStage').textContent = 'Group Stage';
+            document.getElementById('matchDate').textContent = '2026-03-15';
+            document.getElementById('matchVenue').textContent = 'Online';
+        }
+
+        // Form submission
+        document.getElementById('resultForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!selectedFile) {
+                showError('Please upload evidence/screenshot');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('score_team_1', document.getElementById('score1').value);
+            formData.append('score_team_2', document.getElementById('score2').value);
+            formData.append('result_details', document.getElementById('resultDetails').value);
+            formData.append('screenshot_url', selectedFile.name);
+
+            try {
+                const response = await fetch(`/api/matches/${currentMatchId}/result`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showError(data.message || 'Error submitting result');
+                    return;
+                }
+
+                showSuccess('Result submitted successfully! Awaiting admin approval.');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 2000);
+
+            } catch (error) {
+                showError('Error: ' + error.message);
+            }
+        });
+
+        function showSuccess(message) {
+            const el = document.getElementById('successMsg');
+            el.textContent = message;
+            el.style.display = 'block';
+        }
+
+        function showError(message) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = message;
+            el.style.display = 'block';
+            setTimeout(() => {
+                el.style.display = 'none';
+            }, 4000);
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize
+        loadMatchDetails();
+    </script>
+</body>
+</html>

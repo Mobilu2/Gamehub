@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Settings - GameHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .settings-container {
+            max-width: 800px;
+            margin: 2rem auto;
+        }
+
+        .settings-header {
+            margin-bottom: 2rem;
+        }
+
+        .settings-card {
+            background: var(--light-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .settings-section {
+            margin-bottom: 2rem;
+        }
+
+        .settings-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .profile-display {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 2rem;
+            align-items: start;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-picture-section {
+            text-align: center;
+        }
+
+        .profile-picture-large {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            border: 4px solid var(--primary-color);
+        }
+
+        .profile-picture-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .picture-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .profile-info-display {
+            background: var(--dark-bg);
+            padding: 1.5rem;
+            border-radius: 4px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--border-color);
+        }
+
+        .info-value {
+            color: var(--text-color);
+        }
+
+        .edit-form {
+            background: var(--dark-bg);
+            padding: 1.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--light-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            color: #4CAF50;
+        }
+
+        .error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #F44336;
+            color: #F44336;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .profile-display {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .settings-card {
+                padding: 1rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+
+        .leagues-grid, .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .league-item, .team-item {
+            background: var(--dark-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .league-item:hover, .team-item:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .league-name, .team-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .league-game, .team-game {
+            color: var(--primary-color);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .league-description, .team-description {
+            color: var(--border-color);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .league-meta, .team-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--border-color);
+        }
+
+        .no-leagues, .no-teams {
+            text-align: center;
+            color: var(--border-color);
+            padding: 2rem;
+            font-style: italic;
+        }
+    </style>
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a href="index.html" style="text-decoration: none; color: white;">
+                <h1>🎮 GameHub</h1>
+            </a>
+        </div>
+        <div class="navbar-menu">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="leagues.html" class="nav-link">Leagues</a>
+            <a href="teams.html" class="nav-link">Teams</a>
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+            <button onclick="logout()" class="btn-logout">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="settings-container">
+            <div class="settings-header">
+                <h1>🔧 Profile Settings</h1>
+                <p>Manage your profile information and preferences</p>
+            </div>
+
+            <div id="message" class="message"></div>
+
+            <!-- Profile Overview Section -->
+            <div class="settings-card">
+                <div class="section-title">Profile Overview</div>
+                
+                <div class="profile-display">
+                    <div class="profile-picture-section">
+                        <div class="profile-picture-large" id="profilePictureDisplay">👤</div>
+                        <div class="picture-actions">
+                            <label for="profilePictureInput" class="btn btn-secondary" style="cursor: pointer; margin-bottom: 0.5rem;">
+                                📷 Change Picture
+                            </label>
+                            <input type="file" id="profilePictureInput" accept="image/*" style="display: none;">
+                        </div>
+                    </div>
+
+                    <div class="profile-info-display">
+                        <div class="info-row">
+                            <span class="info-label">Name</span>
+                            <span class="info-value" id="displayUsername">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Email</span>
+                            <span class="info-value" id="displayEmail">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Location</span>
+                            <span class="info-value" id="displayLocation">Not set</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Member Since</span>
+                            <span class="info-value" id="displayJoinDate">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Profile Section -->
+            <div class="settings-card">
+                <div class="section-title">Edit Profile Information</div>
+                
+                <form id="editProfileForm" class="edit-form">
+                    <div class="form-group">
+                        <label for="usernameInput">Username *</label>
+                        <input 
+                            type="text" 
+                            id="usernameInput" 
+                            placeholder="Enter your username"
+                            required
+                        >
+                        <small style="color: var(--border-color);">Your unique username on the platform</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="locationInput">Location</label>
+                        <input 
+                            type="text" 
+                            id="locationInput" 
+                            placeholder="e.g., New York, USA"
+                        >
+                        <small style="color: var(--border-color);">Your city or region (optional)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input 
+                            type="email" 
+                            id="emailDisplay" 
+                            disabled
+                            style="opacity: 0.6; cursor: not-allowed;"
+                        >
+                        <small style="color: var(--border-color);">Email cannot be changed</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <span id="submitButtonText">Save Changes</span>
+                            <span id="submitSpinner" class="loading-spinner" style="display: none; margin-left: 0.5rem;"></span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="window.history.back()">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- My Leagues Section -->
+            <div class="settings-card">
+                <div class="section-title">🏆 My Leagues</div>
+                <div id="leaguesContainer">
+                    <div class="loading-spinner" style="display: block; margin: 2rem auto;"></div>
+                </div>
+            </div>
+
+            <!-- My Teams Section -->
+            <div class="settings-card">
+                <div class="section-title">👥 My Teams</div>
+                <div id="teamsContainer">
+                    <div class="loading-spinner" style="display: block; margin: 2rem auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        const API_URL = 'http://localhost:3000/api';
+
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // Load profile on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProfile();
+            setupProfilePictureUpload();
+            setupEditForm();
+            loadUserLeagues();
+            loadUserTeams();
+        });
+
+        async function loadProfile() {
+            try {
+                const response = await fetch(`${API_URL}/users/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load profile');
+                }
+
+                const data = await response.json();
+                const user = data.user;
+
+                // Display profile information
+                document.getElementById('displayUsername').textContent = user.username;
+                document.getElementById('displayEmail').textContent = user.email;
+                document.getElementById('displayLocation').textContent = user.location || 'Not set';
+                document.getElementById('emailDisplay').value = user.email;
+                document.getElementById('displayJoinDate').textContent = new Date(user.created_at).toLocaleDateString();
+
+                // Pre-fill edit form
+                document.getElementById('usernameInput').value = user.username;
+                document.getElementById('locationInput').value = user.location || '';
+
+                // Update profile picture
+                if (user.profile_picture) {
+                    document.getElementById('profilePictureDisplay').innerHTML = `<img src="${user.profile_picture}" alt="Profile Picture" onerror="this.parentElement.innerHTML='👤'">`;
+                }
+
+            } catch (error) {
+                showMessage('Error loading profile: ' + error.message, 'error');
+            }
+        }
+
+        function setupProfilePictureUpload() {
+            const input = document.getElementById('profilePictureInput');
+            input.addEventListener('change', handleProfilePictureUpload);
+        }
+
+        async function handleProfilePictureUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+            if (!allowedTypes.includes(file.type)) {
+                showMessage('Please select a valid image file (JPEG, PNG, GIF)', 'error');
+                return;
+            }
+
+            // Validate file size (5MB limit)
+            if (file.size > 5 * 1024 * 1024) {
+                showMessage('File size must be less than 5MB', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('profilePicture', file);
+
+            try {
+                showMessage('Uploading profile picture...', 'success');
+
+                const response = await fetch(`${API_URL}/users/profile-picture`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Profile picture updated successfully!', 'success');
+                    document.getElementById('profilePictureDisplay').innerHTML = `<img src="${data.profilePicture}" alt="Profile Picture">`;
+                } else {
+                    showMessage(data.message || 'Upload failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Upload failed: ' + error.message, 'error');
+            }
+        }
+
+        function setupEditForm() {
+            const form = document.getElementById('editProfileForm');
+            form.addEventListener('submit', handleEditProfileSubmit);
+        }
+
+        async function handleEditProfileSubmit(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('usernameInput').value.trim();
+            const location = document.getElementById('locationInput').value.trim();
+
+            if (!username) {
+                showMessage('Username is required', 'error');
+                return;
+            }
+
+            // Show loading state
+            document.getElementById('submitButtonText').style.display = 'none';
+            document.getElementById('submitSpinner').style.display = 'inline-block';
+
+            try {
+                const response = await fetch(`${API_URL}/users/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        username,
+                        location: location || null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Profile updated successfully!', 'success');
+                    
+                    // Update user data in localStorage
+                    const user = JSON.parse(localStorage.getItem('user'));
+                    user.username = username;
+                    localStorage.setItem('user', JSON.stringify(user));
+
+                    // Reload profile display
+                    setTimeout(() => {
+                        loadProfile();
+                    }, 1000);
+                } else {
+                    showMessage(data.message || 'Failed to update profile', 'error');
+                }
+            } catch (error) {
+                showMessage('Error updating profile: ' + error.message, 'error');
+            } finally {
+                // Restore submit button
+                document.getElementById('submitButtonText').style.display = 'inline';
+                document.getElementById('submitSpinner').style.display = 'none';
+            }
+        }
+
+        function showMessage(message, type) {
+            const el = document.getElementById('message');
+            el.textContent = message;
+            el.className = `message ${type}`;
+            el.style.display = 'block';
+
+            if (type === 'success') {
+                setTimeout(() => {
+                    el.style.display = 'none';
+                }, 4000);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        async function loadUserLeagues() {
+            try {
+                const response = await fetch(`${API_URL}/leagues/user`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load leagues');
+                }
+
+                const data = await response.json();
+                displayLeagues(data.leagues);
+            } catch (error) {
+                document.getElementById('leaguesContainer').innerHTML = '<p class="no-leagues">Error loading leagues. Please try again later.</p>';
+                console.error('Error loading leagues:', error);
+            }
+        }
+
+        function displayLeagues(leagues) {
+            const container = document.getElementById('leaguesContainer');
+            
+            if (!leagues || leagues.length === 0) {
+                container.innerHTML = '<p class="no-leagues">You haven\'t joined any leagues yet. <a href="leagues.html">Browse leagues</a> to get started!</p>';
+                return;
+            }
+
+            const leaguesGrid = document.createElement('div');
+            leaguesGrid.className = 'leagues-grid';
+
+            leagues.forEach(league => {
+                const leagueItem = document.createElement('div');
+                leagueItem.className = 'league-item';
+                
+                leagueItem.innerHTML = `
+                    <div class="league-name">${league.name}</div>
+                    <div class="league-game">🎮 ${league.game}</div>
+                    <div class="league-description">${league.description || 'No description available'}</div>
+                    <div class="league-meta">
+                        <span>🏆 Prize: ${league.prize_pool || 'TBD'}</span>
+                        <span>📅 Joined: ${new Date(league.created_at).toLocaleDateString()}</span>
+                    </div>
+                `;
+                
+                leagueItem.addEventListener('click', () => {
+                    window.location.href = `league-manage.html?id=${league.id}`;
+                });
+                
+                leaguesGrid.appendChild(leagueItem);
+            });
+
+            container.innerHTML = '';
+            container.appendChild(leaguesGrid);
+        }
+
+        async function loadUserTeams() {
+            try {
+                const response = await fetch(`${API_URL}/teams/user`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load teams');
+                }
+
+                const data = await response.json();
+                displayTeams(data.teams);
+            } catch (error) {
+                document.getElementById('teamsContainer').innerHTML = '<p class="no-teams">Error loading teams. Please try again later.</p>';
+                console.error('Error loading teams:', error);
+            }
+        }
+
+        function displayTeams(teams) {
+            const container = document.getElementById('teamsContainer');
+            
+            if (!teams || teams.length === 0) {
+                container.innerHTML = '<p class="no-teams">You haven\'t joined any teams yet. <a href="teams.html">Browse teams</a> to get started!</p>';
+                return;
+            }
+
+            const teamsGrid = document.createElement('div');
+            teamsGrid.className = 'teams-grid';
+
+            teams.forEach(team => {
+                const teamItem = document.createElement('div');
+                teamItem.className = 'team-item';
+                
+                teamItem.innerHTML = `
+                    <div class="team-name">${team.name}</div>
+                    <div class="team-game">🎮 ${team.game}</div>
+                    <div class="team-description">${team.description || 'No description available'}</div>
+                    <div class="team-meta">
+                        <span>👑 Leader: ${team.leader_name}</span>
+                        <span>👥 Members: ${team.members_count}/${team.max_members}</span>
+                    </div>
+                `;
+                
+                teamItem.addEventListener('click', () => {
+                    window.location.href = `team-manage.html?id=${team.id}`;
+                });
+                
+                teamsGrid.appendChild(teamItem);
+            });
+
+            container.innerHTML = '';
+            container.appendChild(teamsGrid);
+        }
+    </script>
+</body>
+</html>
