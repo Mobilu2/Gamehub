@@ -52,6 +52,7 @@ function displayLeagues(leagues) {
             <div class="card-footer">
                 <span class="league-tag">${league.game}</span>
                 <span class="game-tag">${league.participants || 0} players</span>
+                ${league.players_per_group ? `<span class="group-tag">${league.players_per_group}/group</span>` : ''}
                 <span class="fee-tag">Entry: ${entryFeeText}</span>
             </div>
         </div>
@@ -84,15 +85,18 @@ async function showLeagueDetails(leagueId) {
         const token = getAuthToken();
         const isLoggedIn = token ? true : false;
         
-        // Check if user is a member
+        // Check if user is a member or has pending request
         let isMember = false;
+        let isPending = false;
         if (isLoggedIn) {
             try {
                 const memberResponse = await fetchWithAuth(`${API_URL}/leagues/${leagueId}/check-member`);
                 const memberData = await memberResponse.json();
                 isMember = memberData.isMember;
+                isPending = memberData.isPending;
             } catch (error) {
                 isMember = false;
+                isPending = false;
             }
         }
         
@@ -104,15 +108,18 @@ async function showLeagueDetails(leagueId) {
             <p><strong>Game:</strong> ${league.game}</p>
             <p><strong>Description:</strong> ${league.description || 'No description'}</p>
             <p><strong>Participants:</strong> ${league.participants || 0}</p>
+            ${league.players_per_group ? `<p><strong>Players/Group:</strong> ${league.players_per_group}</p>` : ''}
             <p><strong>Entry Fee:</strong> ${entryFeeText}</p>
             <p><strong>Prize Pool:</strong> ${league.prize_pool || 'TBD'}</p>
             <h3>Standings</h3>
             <div class="standings">
                 ${(league.standings || []).map((standing, index) => {
+                    const groupTag = standing.group_number ? `<span class="group-tag">G${standing.group_number}</span>` : '';
                     if (league.game === 'eFootball') {
                         return `
                             <div class="standing-item">
                                 <span>#${index + 1}</span>
+                                ${groupTag}
                                 <span>${standing.team_name || 'Player'}</span>
                                 <span>Joined</span>
                             </div>
@@ -121,6 +128,7 @@ async function showLeagueDetails(leagueId) {
                         return `
                             <div class="standing-item">
                                 <span>#${index + 1}</span>
+                                ${groupTag}
                                 <span>${standing.team_name || 'Team'}</span>
                                 <span>${standing.wins || 0}W</span>
                             </div>
@@ -133,6 +141,8 @@ async function showLeagueDetails(leagueId) {
                     ${isMember ? `
                         <button class="btn btn-primary" onclick="openChat(${league.id})">💬 League Chat</button>
                         <button class="btn btn-secondary" onclick="viewLeagueMatches(${league.id})">View Matches</button>
+                    ` : isPending ? `
+                        <button class="btn btn-secondary" disabled>Pending Approval</button>
                     ` : `
                         <button class="btn btn-primary" onclick="joinLeague(${league.id})">Join League</button>
                     `}
@@ -170,7 +180,7 @@ async function joinLeague(leagueId) {
         const data = await response.json();
         
         if (response.ok) {
-            alert('Successfully joined league!');
+            alert(data.message || 'Join request sent');
             document.getElementById('leagueModal').classList.remove('show');
             loadLeagues();
         } else {

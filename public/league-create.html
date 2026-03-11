@@ -243,9 +243,15 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Entry Fee Type</label>
-                        <div class="fee-options">
-                            <label class="fee-option">
+                        <label>Required for Draw</label>
+                        <input type="number" id="requiredParticipants" placeholder="optional" min="0" max="128">
+                        <small style="font-size:0.85rem;color:var(--border-color);">Leave empty to use max participants</small>
+                    </div>
+                <div class="form-group" id="groupSizeGroup" style="display:none;">
+                    <label>Players per Group</label>
+                    <input type="number" id="playersPerGroupInput" value="4" min="2" max="16">
+                    <small style="font-size:0.85rem;color:var(--border-color);">Applicable only for group stage leagues</small>
+                </div>
                                 <input type="radio" name="feeType" value="free" checked>
                                 <span>Free Entry</span>
                             </label>
@@ -370,6 +376,13 @@
             const info = document.getElementById('formatInfo');
             const description = formatDescriptions[e.target.value] || '';
             info.textContent = description;
+            // show players per group field when selecting group stage
+            const groupSizeGroup = document.getElementById('groupSizeGroup');
+            if (e.target.value.startsWith('group-stage')) {
+                groupSizeGroup.style.display = 'block';
+            } else {
+                groupSizeGroup.style.display = 'none';
+            }
         });
 
         // Form submission
@@ -396,15 +409,17 @@
                 game: game,
                 format: document.getElementById('leagueFormat').value,
                 max_participants: parseInt(document.getElementById('maxParticipants').value),
-                entry_fee: entryFee,
-                prize_distribution: document.getElementById('prizePool').value,
-                creator_account: feeType === 'paid' ? {
-                    account_type: document.getElementById('accountType').value,
-                    account_number: document.getElementById('accountNumber').value,
-                    account_name: document.getElementById('accountName').value,
-                    bank_name: document.getElementById('bankName').value || null
-                } : null
+                required_participants: document.getElementById('requiredParticipants').value ? parseInt(document.getElementById('requiredParticipants').value) : undefined,
+                players_per_group: document.getElementById('playersPerGroupInput').value ? parseInt(document.getElementById('playersPerGroupInput').value) : undefined
             };
+
+            // include bank/account info only when feeType is paid
+            if (feeType === 'paid') {
+                leagueData.bank_name = document.getElementById('bankName').value || null;
+                leagueData.account_type = document.getElementById('accountType').value;
+                leagueData.account_number = document.getElementById('accountNumber').value;
+                leagueData.account_name = document.getElementById('accountName').value;
+            }
 
             try {
                 const response = await fetch('/api/leagues/create', {

@@ -536,7 +536,7 @@ body {
     border-top: 1px solid var(--border-color);
 }
 
-.league-tag, .game-tag {
+.league-tag, .game-tag, .group-tag {
     display: inline-block;
     background-color: var(--primary-color);
     padding: 0.25rem 0.75rem;

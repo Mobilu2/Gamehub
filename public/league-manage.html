@@ -296,6 +296,7 @@
 
         <div id="leagueHeader" class="league-header">
             <h2 id="leagueName">League Name</h2>
+            <button id="deleteLeagueBtn" class="action-btn btn-reject" style="float:right; margin-top:-1rem;">Delete League</button>
             <p id="leagueDesc">League Description</p>
             <div class="league-stats">
                 <div class="stat-card">
@@ -314,6 +315,10 @@
                     <div class="stat-value" id="leagueFormat">Format</div>
                     <div class="stat-label">League Type</div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="playersPerGroup">4</div>
+                    <div class="stat-label">Players/Group</div>
+                </div>
             </div>
         </div>
 
@@ -321,6 +326,7 @@
             <div class="sidebar">
                 <div class="sidebar-item active" data-section="overview">📊 Overview</div>
                 <div class="sidebar-item" data-section="members">👥 Members</div>
+                <div class="sidebar-item" data-section="draw">🎲 Draw</div>
                 <div class="sidebar-item" data-section="matches">⚽ Matches</div>
                 <div class="sidebar-item" data-section="results">📝 Results</div>
                 <div class="sidebar-item" data-section="payments">💰 Payments</div>
@@ -386,6 +392,35 @@
                                 <tr>
                                     <td colspan="4" style="text-align: center; color: var(--border-color);">No approved members</td>
                                 </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Draw Section -->
+                <div id="draw" class="section">
+                    <h3>Draw Settings & Results</h3>
+                    <div style="margin-top:1rem;">
+                        <label>Required Participants:</label>
+                        <input type="number" id="requiredParticipants" min="0" style="width:4rem;" />
+                    <br/>
+                    <label>Players per Group:</label>
+                        <input type="number" id="playersPerGroupSetting" min="2" value="4" style="width:4rem;" />
+                        <button class="btn btn-secondary" id="updateRequiredBtn">Update</button>
+                    </div>
+                    <div style="margin-top:1rem;">
+                        <p><strong>Current Approved:</strong> <span id="currentParticipants">0</span></p>
+                        <p><strong>Draw Triggered:</strong> <span id="drawTriggered">No</span></p>
+                        <p><strong>Last Draw At:</strong> <span id="lastDrawAt">-</span></p>
+                    </div>
+                    <div id="drawResults" class="table-wrapper" style="margin-top:1.5rem;">
+                        <h4>Pairings</h4>
+                        <table>
+                            <thead>
+                                <tr><th>Group</th><th>#</th><th>Player 1</th><th>Player 2</th></tr>
+                            </thead>
+                            <tbody id="drawTableBody">
+                                <tr><td colspan="4" style="text-align:center;color:var(--border-color);">No draw performed yet</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -555,13 +590,32 @@
                 document.getElementById('participantCount').textContent = league.participants_count || 0;
                 document.getElementById('entryFee').textContent = league.entry_fee || 3000;
                 document.getElementById('leagueFormat').textContent = league.format || 'Standard';
+                // show players per group only for group-stage formats
+                document.getElementById('playersPerGroup').textContent = league.players_per_group || 4;
+                // keep the full league object around for other helpers
+                window.currentLeague = league;
                 document.getElementById('gameType').textContent = league.game;
                 document.getElementById('formatType').textContent = league.format;
                 document.getElementById('leagueStatus').textContent = league.status || 'Open';
                 document.getElementById('feeCurrency').textContent = (league.entry_fee || 3000) + ' TSH';
 
-                // Load members
+                // show delete button only for admin/creator
+                const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                if (league.admin_id && currentUser.id && parseInt(currentUser.id) === league.admin_id) {
+                    document.getElementById('deleteLeagueBtn').style.display = 'inline-block';
+                } else {
+                    document.getElementById('deleteLeagueBtn').style.display = 'none';
+                }
+
+                // Load members/participants
                 updateMembersList(league.members);
+
+                // populate pending requests separately as it may include other teams/users
+                loadPendingRequests();
+
+                // Load draw status/results (only for eFootball)
+                loadDrawStatus();
+                loadDrawResults();
 
                 // Load matches
                 loadMatches();
@@ -573,44 +627,60 @@
         }
 
         function updateMembersList(members) {
+    // also refresh draw status in case approvals changed
+    loadDrawStatus();
+
+            if (!members) members = [];
             const pending = members.filter(m => m.status === 'pending');
             const approved = members.filter(m => m.status === 'approved');
 
             document.getElementById('pendingCount').textContent = pending.length;
 
-            // Pending members
+            // Pending members or teams
             const pendingList = document.getElementById('pendingList');
             if (pending.length === 0) {
                 pendingList.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--border-color);">No pending approvals</td></tr>';
             } else {
-                pendingList.innerHTML = pending.map(member => `
+                pendingList.innerHTML = pending.map(member => {
+                    const displayName = member.team_name ? member.team_name : (member.username || 'Unknown');
+                    const extra = member.team_name ? (`Leader: ${member.leader_name || 'N/A'}`) : (member.email || '-');
+                    const payStatus = member.payment_status || 'unpaid';
+                    const type = member.team_id ? 'team' : 'user';
+                    const id = member.team_id || member.user_id;
+                    return `
                     <tr>
-                        <td>${member.username || 'Unknown'}</td>
-                        <td>${member.email || '-'}</td>
-                        <td><span class="badge badge-${member.payment_status || 'unpaid'}">${(member.payment_status || 'unpaid').toUpperCase()}</span></td>
+                        <td>${displayName}</td>
+                        <td>${extra}</td>
+                        <td><span class="badge badge-${payStatus}">${payStatus.toUpperCase()}</span></td>
                         <td>
                             <div class="action-buttons">
-                                <button class="action-btn btn-approve" onclick="approveMember(${member.user_id})">Approve</button>
-                                <button class="action-btn btn-reject" onclick="rejectMember(${member.user_id})">Reject</button>
+                                <button class="action-btn btn-approve" onclick="approveRequest('${type}', ${id})">Approve</button>
+                                <button class="action-btn btn-reject" onclick="rejectMember('${type}', ${id})">Reject</button>
                             </div>
                         </td>
                     </tr>
-                `).join('');
+                    `;
+                }).join('');
             }
 
-            // Approved members
+            // Approved list
             const approvedList = document.getElementById('approvedList');
             if (approved.length === 0) {
                 approvedList.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--border-color);">No approved members</td></tr>';
             } else {
-                approvedList.innerHTML = approved.map(member => `
+                approvedList.innerHTML = approved.map(member => {
+                    const displayName = member.team_name ? member.team_name : (member.username || 'Unknown');
+                    const extra = member.team_name ? (`Leader: ${member.leader_name || 'N/A'}`) : '';
+                    const payStatus = member.payment_status || 'unpaid';
+                    return `
                     <tr>
-                        <td>${member.username || 'Unknown'}</td>
+                        <td>${displayName}</td>
+                        <td>${extra}</td>
                         <td><span class="badge badge-approved">APPROVED</span></td>
-                        <td><span class="badge badge-${member.payment_status || 'unpaid'}">${(member.payment_status || 'unpaid').toUpperCase()}</span></td>
-                        <td>${new Date(member.joined_at).toLocaleDateString()}</td>
+                        <td><span class="badge badge-${payStatus}">${payStatus.toUpperCase()}</span></td>
                     </tr>
-                `).join('');
+                    `;
+                }).join('');
             }
         }
 
@@ -701,12 +771,137 @@
             }
         }
 
+        // ---- draw helpers ----
+        async function loadDrawStatus() {
+            try {
+                const resp = await fetch(`/api/leagues/${currentLeagueId}/draw-status`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await resp.json();
+                if (!resp.ok) return;
+                const status = data.draw_status || {};
+                document.getElementById('requiredParticipants').value = status.required_participants || '';
+                document.getElementById('currentParticipants').textContent = status.current_participants || 0;
+                document.getElementById('drawTriggered').textContent = status.draw_triggered ? 'Yes' : 'No';
+                document.getElementById('lastDrawAt').textContent = status.last_draw_at || '-';
+                // show players per group using league info if available
+                if (window.currentLeague && window.currentLeague.players_per_group) {
+                    document.getElementById('playersPerGroupSetting').value = window.currentLeague.players_per_group;
+                }
+                if (status.draw_triggered) {
+                    // if a draw has occurred, load the results too
+                    loadDrawResults();
+                }
+            } catch (err) {
+                console.error('Error loading draw status', err);
+            }
+        }
+
+        async function loadDrawResults() {
+            try {
+                const resp = await fetch(`/api/leagues/${currentLeagueId}/draws`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await resp.json();
+                if (!resp.ok) return;
+                const rows = data.draws || [];
+                const body = document.getElementById('drawTableBody');
+                if (rows.length === 0) {
+                    body.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--border-color);">No draw performed yet</td></tr>';
+                } else {
+                    body.innerHTML = rows.map((r, idx) => `
+                        <tr>
+                            <td>${r.group_number || ''}</td>
+                            <td>${r.match_order}</td>
+                            <td>${r.participant_1_name || r.participant_1_id || ''}</td>
+                            <td>${r.participant_2_name || r.participant_2_id || 'BYE'}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error('Error loading draw results', err);
+            }
+        }
+
+        document.getElementById('updateRequiredBtn').addEventListener('click', async () => {
+            const val = parseInt(document.getElementById('requiredParticipants').value);
+            if (isNaN(val) || val < 0) {
+                showError('Please enter a valid number');
+                return;
+            }
+            try {
+                const playersGrpVal = parseInt(document.getElementById('playersPerGroupSetting').value);
+            const resp = await fetch(`/api/leagues/${currentLeagueId}/set-required-participants`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ required_participants: val, players_per_group: !isNaN(playersGrpVal) ? playersGrpVal : undefined })
+                });
+                const data = await resp.json();
+                if (!resp.ok) {
+                    showError(data.message);
+                    return;
+                }
+                showSuccess('Required participant count updated');
+                loadDrawStatus();
+            } catch (err) {
+                showError('Error updating required participants');
+            }
+        });
+
+
         // Sidebar navigation
         document.querySelectorAll('.sidebar-item').forEach(item => {
             item.addEventListener('click', () => {
                 switchSection(item.dataset.section);
             });
         });
+
+        // load pending approvals separately
+        async function loadPendingRequests() {
+            try {
+                const response = await fetch(`/api/leagues/${currentLeagueId}/pending-approvals`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    console.error('Error loading pending approvals', data.message);
+                    return;
+                }
+                // combine members and teams into single list
+                let combined = [];
+                if (Array.isArray(data.pending_members)) {
+                    combined = combined.concat(data.pending_members);
+                }
+                if (Array.isArray(data.pending_teams)) {
+                    combined = combined.concat(data.pending_teams);
+                }
+                updateMembersList(combined);
+            } catch (err) {
+                console.error('Error fetching pending approvals', err);
+            }
+        }
+
+        // delete league button
+        document.getElementById('deleteLeagueBtn').addEventListener('click', deleteLeague);
+
+        async function deleteLeague() {
+            if (!confirm('Are you sure you want to delete this league? This action cannot be undone.')) return;
+            try {
+                const response = await fetch(`/api/leagues/${currentLeagueId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showError(data.message);
+                    return;
+                }
+                alert('League deleted successfully');
+                window.location.href = 'leagues.html';
+            } catch (err) {
+                showError('Error deleting league: ' + err.message);
+            }
+        }
 
         function switchSection(section) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -756,15 +951,19 @@
             }
         });
 
-        async function approveMember(userId) {
+        async function approveRequest(type, id) {
             try {
+                const body = {};
+                if (type === 'user') body.user_id = id;
+                else if (type === 'team') body.team_id = id;
+
                 const response = await fetch(`/api/leagues/${currentLeagueId}/approve-member`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ user_id: userId })
+                    body: JSON.stringify(body)
                 });
 
                 const data = await response.json();
@@ -774,15 +973,40 @@
                     return;
                 }
 
-                showSuccess('Member approved');
+                showSuccess('Approval successful');
                 loadLeagueDetails();
+                loadPendingRequests();
             } catch (error) {
                 showError('Error: ' + error.message);
             }
         }
 
-        function rejectMember(userId) {
-            alert('Member rejection will be implemented');
+        function rejectMember(type, id) {
+            // simply delete the pending request for now
+            if (!confirm('Are you sure you want to reject this request?')) return;
+            let url = `/api/leagues/${currentLeagueId}/requests`;
+            let body = {};
+            if (type === 'user') body.user_id = id;
+            else if (type === 'team') body.team_id = id;
+
+            fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(body)
+            }).then(r => r.json()).then(data => {
+                if (!data || data.error) {
+                    showError(data.message || data.error || 'Error rejecting');
+                } else {
+                    showSuccess('Request rejected');
+                    loadLeagueDetails();
+                    loadPendingRequests();
+                }
+            }).catch(err => {
+                showError('Error: ' + err.message);
+            });
         }
 
         function showSuccess(message) {
